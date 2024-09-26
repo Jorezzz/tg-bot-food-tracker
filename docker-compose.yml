@@ -1,0 +1,32 @@
+services:
+  app:
+    build: ./src
+    container_name: app
+    command: python bot.py
+    ports:
+      - 80:80
+    volumes:
+      - ./src:/app
+    depends_on:
+      - postgres
+      # - mongodb
+
+  postgres:
+    image: postgres:14-alpine
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=DwA76qxM9aw48srr1m718F9Vu4yZpR26
+      - POSTGRES_USER=georgiy
+      - POSTGRES_DB=prod
+    volumes:
+      - ./databases:/docker-entrypoint-initdb.d
+
+  # mongodb:
+  #   image: mongodb/mongodb-community-server:6.0-ubi8
+  #   environment:
+  #     - MONGO_INITDB_ROOT_USERNAME=georgiy
+  #     - MONGO_INITDB_ROOT_PASSWORD=DwA76qxM9aw48srr1m718F9Vu4yZpR26
+  #     - MONGO_INITDB_DATABASE=users
+  #   ports:
+  #     - 27017:27017

@@ -1,0 +1,50 @@
+import asyncio
+import logging
+from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
+from aiogram.fsm.storage.memory import MemoryStorage
+from aiogram.enums import ParseMode
+
+import os
+from dotenv import load_dotenv
+from asyncpg_lite import DatabaseManager
+
+# from db.client import PGClient
+
+load_dotenv()
+
+logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+logger = logging.getLogger(__name__)
+
+OPENAI_TOKEN = os.environ['OPENAI_TOKEN']
+TELEGRAM_TOKEN = os.environ['TELEGRAM_TOKEN']
+PG_USER = os.environ['PG_USER']
+PG_DB = os.environ['PG_DB']
+PG_PWD = os.environ['PG_PWD']
+
+bot = Bot(
+    token=TELEGRAM_TOKEN, 
+    default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN)
+)
+storage = MemoryStorage()
+dp = Dispatcher(storage=storage)
+db_manager = DatabaseManager(
+    '123',
+    db_url = f"postgresql://{PG_USER}:{PG_PWD}@postgres:5432/{PG_DB}"
+)
+# This can be `postgresql://scott:myawesomepassword@localhost:5432/mydb`
+# session = Session(engine, future=True)
+
+# try:
+#     loop = asyncio.get_running_loop()
+# except Exception as e:
+#     loop = asyncio.get_event_loop()
+# pool = loop.run_until_complete(
+#     create_pool(
+#         user=PG_USER, 
+#         password=PG_PWD, 
+#         host='postgres', 
+#         database=PG_DB
+#     )
+# )
+# client = PGClient(pool, logger)
