@@ -17,5 +17,6 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             cd /home/deployer/food-bot
+            docker compose down
             git pull
             docker compose up -d
