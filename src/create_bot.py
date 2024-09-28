@@ -5,25 +5,10 @@ from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.enums import ParseMode
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import redis.asyncio as redis
-
-import os
-from dotenv import load_dotenv
 from asyncpg import create_pool
+from config import PG_DB, PG_PWD, PG_USER, TELEGRAM_TOKEN
 
 # from db.client import PGClient
-
-load_dotenv()
-
-logging.basicConfig(
-    level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s"
-)
-logger = logging.getLogger(__name__)
-
-OPENAI_TOKEN = os.environ["OPENAI_TOKEN"]
-TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
-PG_USER = os.environ["PG_USER"]
-PG_DB = os.environ["PG_DB"]
-PG_PWD = os.environ["PG_PWD"]
 
 
 async def init_db_postgres():

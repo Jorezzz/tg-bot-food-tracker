@@ -1,4 +1,6 @@
-from create_bot import logger, client, client_times, dp
+from create_bot import client, client_times, dp, bot
+from aiogram.methods.send_message import SendMessage
+from config import logger
 from utils import convert_dict_from_bytes, convert_list_from_bytes, fill_null
 import pytz
 import datetime
@@ -33,12 +35,15 @@ async def pg_log_message(message, model_output, image):
             "user_id": user_id,
             "message_id": message_id,
             "image": image,
+            "resonse_raw": str(model_output),
         },
     )
     await pg_client.insert("dishes", dishes)
 
 
-async def register_user(message):
+async def register_user(
+    message, current_energy=0, energy_limit=1500, role_id=1, end_hour=0, end_minute=0
+):
     user_id = message.from_user.id
     username = message.from_user.username
     first_name = message.from_user.first_name
@@ -51,12 +56,12 @@ async def register_user(message):
             "username": username,
             "first_name": fill_null(first_name, ""),
             "last_name": fill_null(last_name, ""),
-            "current_energy": 0,
-            "energy_limit": 1500,
-            "role": "user",
+            "current_energy": current_energy,
+            "energy_limit": energy_limit,
+            "role_id": role_id,
             "dttm_started_dttm": now,
-            "end_hour": 0,
-            "end_minute": 0,
+            "end_hour": end_hour,
+            "end_minute": end_minute,
         },
     )
     await client_times.sadd("0.0", str(user_id))
@@ -64,7 +69,7 @@ async def register_user(message):
 
 async def get_user(user_id):
     res = await client.hgetall(str(user_id))
-    return convert_dict_from_bytes(res)
+    return convert_dict_from_bytes(res) if res is not None else None
 
 
 async def update_user(user_id, update_dict):
@@ -103,9 +108,6 @@ async def finish_user_day(user_id, dttm):
     await pg_client.insert(
         "daily_energy",
         {
-            "day_id": hashlib.sha256(
-                (str(user_id) + str(user_data["dttm_started_dttm"])).encode()
-            ).hexdigest(),
             "user_id": int(user_id),
             "dttm_started_dttm": datetime.datetime.strptime(
                 user_data["dttm_started_dttm"], FORMAT_STRING
@@ -122,3 +124,10 @@ async def finish_user_day(user_id, dttm):
             "dttm_started_dttm": dttm.strftime(FORMAT_STRING),
         },
     )
+    if int(user_data["current_energy"]) > int(user_data["energy_limit"]):
+        text = f'Сегодня вы превысили лимит каллорий на {int(user_data["current_energy"]) - int(user_data["energy_limit"])}, но не стоит расстраиваться. Похудение это сложный процесс, уверен завтра у вас всё получится!'
+    elif int(user_data["current_energy"]) == int(user_data["energy_limit"]):
+        text = f"Сегодня вы ровно уложились в днейвной лимит каллорий. Так держать!"
+    else:
+        text = f'Сегодня вы уложились в днейвной лимит каллорий, и даже остался запас в {int(user_data["energy_limit"]) - int(user_data["current_energy"])}. Так держать!'
+    await bot(SendMessage(chat_id=int(user_id), text=text, disable_notification=True))

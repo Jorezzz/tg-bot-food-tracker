@@ -1,8 +1,9 @@
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from db.functions import update_user, swap_time
+from keyboard import settings_keyboard, main_keyboard
 
 
 class EnergyLimitForm(StatesGroup):
@@ -16,10 +17,26 @@ class DayFinishForm(StatesGroup):
 settings_router = Router()
 
 
+@settings_router.message(F.text.contains("Настройки"))
+async def open_settings_menu(message: Message):
+    kb = await settings_keyboard()
+    await message.reply("Выберите настройку", reply_markup=kb)
+
+
+@settings_router.message(F.text.contains("Назад"))
+async def close_settings_menu(message: Message):
+    kb = await main_keyboard(message.from_user.id)
+    await message.reply("Возвращаюсь назад", reply_markup=kb)
+
+
+@settings_router.message(F.text.contains("Изменить время окончания дня"))
 @settings_router.message(F.text == "/update_finish_day")
 async def start_updating_finish_day(message: Message, state: FSMContext):
     await state.set_state(DayFinishForm.day_finish)
-    await message.reply("Укажите новое время окончания дня в формате час.минута")
+    kb = await main_keyboard(message.from_user.id)
+    await message.reply(
+        "Укажите новое время окончания дня в формате час.минута", reply_markup=kb
+    )
 
 
 @settings_router.message(DayFinishForm.day_finish)
@@ -36,10 +53,12 @@ async def process_finish_day(message: Message, state: FSMContext):
         await message.answer(text="Неверный формат ввода")
 
 
+@settings_router.message(F.text.contains("Изменить дневной лимит"))
 @settings_router.message(F.text == "/update_daily_limit")
 async def start_updating_daily_limit(message: Message, state: FSMContext):
     await state.set_state(EnergyLimitForm.energy_limit)
-    await message.reply("Укажите новый лимит каллорий")
+    kb = await main_keyboard(message.from_user.id)
+    await message.reply("Укажите новый лимит каллорий", reply_markup=kb)
 
 
 @settings_router.message(EnergyLimitForm.energy_limit)

@@ -1,5 +1,5 @@
 from typing import Dict, Any, List
-from create_bot import logger
+from config import logger
 
 
 class PGClient:

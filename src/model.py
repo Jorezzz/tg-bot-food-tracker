@@ -1,6 +1,10 @@
 from aiohttp import ClientSession
-
-OPENAI_SYSTEM_PROMPT = "Ты умный подсчитыватель каллорий. Определи, что за блюда и продукты представлены на картинках (скорее всего это блюда популярные в России), выпиши сколько они весят и сколько каллорий в каждом из них и в этом приёме пищи в целом. Если не можешь определить точно выдай наиболее похожий вариант. Ответ выдавай на русском языке."
+from config import (
+    OPENAI_TOKEN,
+    logger,
+    OPENAI_SYSTEM_PROMPT,
+    OPENAI_SYSTEM_SUGGEST_PROMPT,
+)
 
 
 def form_output(data):
@@ -18,7 +22,17 @@ def form_output(data):
     return output, message_total
 
 
-async def get_chatgpt_description(b64_photo, OPENAI_TOKEN, logger):
+async def make_request(headers, payload):
+    async with ClientSession(headers=headers) as session:
+        async with session.post(
+            "https://api.openai.com/v1/chat/completions", json=payload
+        ) as response:
+            result = await response.json()
+            logger.info(f"{result}")
+            return result["choices"][0]["message"]
+
+
+async def get_chatgpt_photo_description(b64_photo):
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {OPENAI_TOKEN}",
@@ -92,10 +106,46 @@ async def get_chatgpt_description(b64_photo, OPENAI_TOKEN, logger):
         },
     }
 
-    async with ClientSession(headers=headers) as session:
-        async with session.post(
-            "https://api.openai.com/v1/chat/completions", json=payload
-        ) as response:
-            result = await response.json()
-            logger.info(f"{result}")
-            return result["choices"][0]["message"]
+    response = await make_request(headers, payload)
+    return response
+
+
+async def get_chatgpt_remaining_energy_suggestion(current_energy, remaining_energy):
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {OPENAI_TOKEN}",
+    }
+
+    payload = {
+        "model": "gpt-4o-mini",
+        "messages": [
+            {
+                "role": "system",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": OPENAI_SYSTEM_SUGGEST_PROMPT,
+                    }
+                ],
+            },
+        ]
+        + [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": (
+                            f"Текущее количество каллорий {current_energy}, осталось до дневного лимита {remaining_energy}"
+                            if remaining_energy > 0
+                            else f"Текущее количество каллорий {current_energy}, дневной лимит превышен на {remaining_energy}"
+                        ),
+                    }
+                ],
+            }
+        ],
+        "max_tokens": 500,
+    }
+
+    response = await make_request(headers, payload)
+    return response["content"]

@@ -4,6 +4,7 @@ CREATE TABLE IF NOT EXISTS messages
     user_id BIGINT NOT NULL,
     message_id BIGINT NOT NULL,
     image TEXT,
+    resonse_raw TEXT,
     PRIMARY KEY(user_id, message_id)
 );
 
