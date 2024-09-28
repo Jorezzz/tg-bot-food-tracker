@@ -1,6 +1,6 @@
 aiogram
 aiohttp
-asyncpg_lite
 python-dotenv
 apscheduler
 redis
+asyncpg

@@ -2,6 +2,20 @@ from aiohttp import ClientSession
 
 OPENAI_SYSTEM_PROMPT = 'Ты умный подсчитыватель каллорий. Определи, что за блюда и продукты представлены на картинках (скорее всего это блюда популярные в России), выпиши сколько они весят и сколько каллорий в каждом из них и в этом приёме пищи в целом. Если не можешь определить точно выдай наиболее похожий вариант. Ответ выдавай на русском языке.'
 
+def form_output(data):
+    output = ''
+    message_total = 0
+    for _, dish in enumerate(data['dishes']):
+        output += f"{dish['dish_name']}:\n"
+        dish_total = 0
+        for ingridient in dish['composition']:
+            output += f"  {ingridient['ingridient_name']}: {ingridient['ingridient_mass_in_grams']} грамм - {ingridient['ingridient_callories']} каллорий\n"
+            dish_total += int(ingridient['ingridient_callories'])
+        output += f"В блюде {dish_total} каллорий\n\n"
+        message_total += dish_total
+    output += f"Всего {message_total} каллорий"
+    return output, message_total
+
 async def get_chatgpt_description(b64_photo, OPENAI_TOKEN, logger):
     headers = {
         "Content-Type": "application/json",
@@ -74,9 +88,6 @@ async def get_chatgpt_description(b64_photo, OPENAI_TOKEN, logger):
                                 "additionalProperties": False
                             }
                         },
-                        # "final_sum": {
-                        #     "type": "number"
-                        # }
                     },
                     "required": ["dishes"],
                     "additionalProperties": False

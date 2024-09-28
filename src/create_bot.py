@@ -1,4 +1,3 @@
-import asyncio
 import logging
 from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
@@ -9,7 +8,7 @@ import redis.asyncio as redis
 
 import os
 from dotenv import load_dotenv
-from asyncpg_lite import DatabaseManager
+from asyncpg import create_pool
 
 # from db.client import PGClient
 
@@ -24,8 +23,20 @@ PG_USER = os.environ['PG_USER']
 PG_DB = os.environ['PG_DB']
 PG_PWD = os.environ['PG_PWD']
 
+
+async def init_db_postgres():
+    pool = await create_pool(
+            user=PG_USER, 
+            password=PG_PWD, 
+            host='postgres', 
+            database=PG_DB
+    )
+    return pool
+
+
 client = redis.Redis.from_pool(redis.ConnectionPool.from_url("redis://redis:6379/0"))
 client_times = redis.Redis.from_pool(redis.ConnectionPool.from_url("redis://redis_timers:6379/0"))
+
 scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
 bot = Bot(
     token=TELEGRAM_TOKEN, 
@@ -33,23 +44,3 @@ bot = Bot(
 )
 storage = MemoryStorage()
 dp = Dispatcher(storage=storage)
-db_manager = DatabaseManager(
-    '123',
-    db_url = f"postgresql://{PG_USER}:{PG_PWD}@postgres:5432/{PG_DB}"
-)
-# This can be `postgresql://scott:myawesomepassword@localhost:5432/mydb`
-# session = Session(engine, future=True)
-
-# try:
-#     loop = asyncio.get_running_loop()
-# except Exception as e:
-#     loop = asyncio.get_event_loop()
-# pool = loop.run_until_complete(
-#     create_pool(
-#         user=PG_USER, 
-#         password=PG_PWD, 
-#         host='postgres', 
-#         database=PG_DB
-#     )
-# )
-# client = PGClient(pool, logger)

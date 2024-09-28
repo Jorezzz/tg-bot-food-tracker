@@ -1,17 +1,14 @@
 import asyncio
-from create_bot import bot, dp, scheduler
+from create_bot import bot, dp, scheduler, init_db_postgres
 from handlers.user_handlers import user_router
 from db.functions import finish_day_check_all_users
-
+from db.client import PGClient
 
 async def main():
-    # регистрация роутеров
     dp.include_router(user_router)
-    # dp.include_router(admin_router)
 
-    # регистрация функций при старте и завершении работы бота
-    # dp.startup.register(start_bot)
-    # dp.shutdown.register(stop_bot)
+    pool = await init_db_postgres()
+    dp['pg_client'] = PGClient(pool)
 
     # запуск бота в режиме long polling при запуске бот очищает все обновления, которые были за его моменты бездействия
     try:

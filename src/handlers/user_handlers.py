@@ -2,10 +2,10 @@ from aiogram import Router, F
 from aiogram.types import Message
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from create_bot import bot, OPENAI_TOKEN, logger
+from create_bot import bot, dp, OPENAI_TOKEN, logger
 import io
 from utils import encode_image, form_output
-from openai_requests import get_chatgpt_description
+from model import get_chatgpt_description
 from db.functions import register_user, add_daily_energy, get_user, update_user, pg_log_message, swap_time
 
 
