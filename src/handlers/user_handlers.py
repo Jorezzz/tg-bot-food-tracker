@@ -4,8 +4,8 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from create_bot import bot, dp, OPENAI_TOKEN, logger
 import io
-from utils import encode_image, form_output
-from model import get_chatgpt_description
+from utils import encode_image
+from model import get_chatgpt_description, form_output
 from db.functions import register_user, add_daily_energy, get_user, update_user, pg_log_message, swap_time
 
 
