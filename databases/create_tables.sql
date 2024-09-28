@@ -2,30 +2,46 @@ CREATE TABLE IF NOT EXISTS messages
 (
     message_dttm TIMESTAMP NOT NULL,
     user_id BIGINT NOT NULL,
-    message_id VARCHAR(32) NOT NULL,
-    dish_name VARCHAR(255),
-    dish_mass INTEGER,
-    dish_energy INTEGER
-)
-PARTITION BY RANGE (EXTRACT(YEAR FROM message_dttm), EXTRACT(MONTH FROM message_dttm));
-
-CREATE TABLE IF NOT EXISTS users
-(
-    registered_dttm TIMESTAMP NOT NULL DEFAULT current_timestamp,
-    user_id BIGINT NOT NULL UNIQUE,
-    username VARCHAR(255) NOT NULL,
-    first_name VARCHAR(255),
-    last_name VARCHAR(255),
-    current_energy INTEGER DEFAULT 0,
-    energy_limit INTEGER DEFAULT 0,
-    role VARCHAR(255) DEFAULT 'user',
-    PRIMARY KEY(user_id)
+    message_id BIGINT NOT NULL,
+    image TEXT,
+    PRIMARY KEY(user_id, message_id)
 );
 
--- CREATE TABLE IF NOT EXISTS actions
+CREATE TABLE IF NOT EXISTS dishes
+(
+    user_id BIGINT NOT NULL,
+    message_id BIGINT NOT NULL,
+    dish_name VARCHAR(255),
+    ingridient_name VARCHAR(255),
+    ingridient_mass INTEGER,
+    ingridient_energy INTEGER,
+    PRIMARY KEY(user_id, message_id)
+);
+
+-- CREATE TABLE IF NOT EXISTS users
 -- (
---     dttm TIMESTAMP NOT NULL DEFAULT current_timestamp,
---     user_id BIGINT NOT NULL,
---     action VARCHAR(255),
---     result VARCHAR(255),
+--     registered_dttm TIMESTAMP NOT NULL DEFAULT current_timestamp,
+--     user_id BIGINT NOT NULL UNIQUE,
+--     username VARCHAR(255) NOT NULL,
+--     first_name VARCHAR(255),
+--     last_name VARCHAR(255),
+--     current_energy INTEGER DEFAULT 0,
+--     energy_limit INTEGER DEFAULT 0,
+--     role VARCHAR(255) DEFAULT 'user',
+--     dttm_started_dttm TIMESTAMP NOT NULL DEFAULT current_timestamp,
+--     end_hour INTEGER DEFAULT 0,
+--     end_minute INTEGER DEFAULT 0,
+--     last_image_message_id BIGINT,
+--     PRIMARY KEY(user_id)
 -- );
+
+CREATE TABLE IF NOT EXISTS daily_energy
+(
+    day_id VARCHAR(255) NOT NULL UNIQUE,
+    dttm_started_dttm TIMESTAMP NOT NULL,
+    dttm_finished_dttm TIMESTAMP NOT NULL,
+    user_id BIGINT NOT NULL,
+    current_energy INTEGER DEFAULT 0,
+    energy_limit INTEGER DEFAULT 0,
+    PRIMARY KEY(day_id)
+);

@@ -6,18 +6,22 @@ from create_bot import bot, OPENAI_TOKEN, logger
 import io
 from utils import encode_image, form_output
 from openai_requests import get_chatgpt_description
-from db.functions import register_user, add_daily_energy, get_user, update_user
+from db.functions import register_user, add_daily_energy, get_user, update_user, pg_log_message, swap_time
 
 
 class EnergyLimitForm(StatesGroup):
     energy_limit = State()
 
 
+class DayFinishForm(StatesGroup):
+    day_finish = State()
+
+
 user_router = Router()
 
 
 @user_router.message(F.text == '/start')
-async def init_user(message: Message):
+async def start(message: Message):
     await message.answer(text='Перед использованием нужно зарегистрироваться')
 
 
@@ -32,13 +36,42 @@ async def init_user(message: Message):
 
 
 @user_router.message(F.text == '/daily_total')
-async def init_user(message: Message):
+async def get_daily_total(message: Message):
     try:
         user_data = await get_user(message.from_user.id)
         await message.answer(text=f"Дневной лимит каллорий {user_data['current_energy']} из {user_data['energy_limit']}")
     except Exception as e:
         logger.error(f"{e}")
         await message.answer(text="Some error ocured")
+
+
+@user_router.message(F.text == '/update_finish_day')
+async def start_updating_finish_day(message, state: FSMContext):
+    await state.set_state(DayFinishForm.day_finish)
+    await message.reply("Укажите новое время окончания дня в формате час.минута")
+
+
+@user_router.message(DayFinishForm.day_finish)
+async def process_finish_day(message, state: FSMContext):
+    await state.clear()
+    try:
+        await swap_time(
+            message.from_user.id, 
+            str(int(message.text.split('.')[0])), 
+            str(int(message.text.split('.')[1]))
+        )
+        # hour = int(message.text.split('.')[0])
+        # minute = int(message.text.split('.')[1])
+        # await update_user(
+        #     message.from_user.id, 
+        #     {
+        #         'end_hour': hour,
+        #         'end_minute': minute,
+        #     }
+        # )
+        await message.answer(text='Время окончания дня измененно')
+    except ValueError:
+        await message.answer(text="Неверный формат ввода")
 
 
 @user_router.message(F.text == '/update_daily_limit')
@@ -71,7 +104,10 @@ async def parse_photo(message: Message):
         OPENAI_TOKEN, 
         logger
     )
-    output = form_output(response)
+    model_output = eval(response['content'])
+    output = form_output(model_output)
+    await pg_log_message(message, model_output, b64_photo)
+    await update_user(message.from_user.id, {'last_image_message_id': message.message_id})
 
     await add_daily_energy(message.from_user.id, output[1])
     await message.answer(text=output[0])

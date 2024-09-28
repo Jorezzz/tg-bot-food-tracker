@@ -1,14 +1,7 @@
 import asyncio
-from create_bot import bot, dp
+from create_bot import bot, dp, scheduler
 from handlers.user_handlers import user_router
-from aiogram.types import BotCommand, BotCommandScopeDefault
-
-
-# Функция, которая настроит командное меню (дефолтное для всех пользователей)
-# async def set_commands():
-#     commands = [BotCommand(command='start', description='Старт'),
-#                 BotCommand(command='profile', description='Мой профиль')]
-#     await bot.set_my_commands(commands, BotCommandScopeDefault())
+from db.functions import finish_day_check_all_users
 
 
 async def main():
@@ -22,6 +15,8 @@ async def main():
 
     # запуск бота в режиме long polling при запуске бот очищает все обновления, которые были за его моменты бездействия
     try:
+        scheduler.add_job(finish_day_check_all_users, 'interval', seconds=60)
+        scheduler.start()
         await bot.delete_webhook(drop_pending_updates=True)
         await dp.start_polling(bot)
     finally:

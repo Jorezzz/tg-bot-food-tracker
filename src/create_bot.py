@@ -4,6 +4,8 @@ from aiogram import Bot, Dispatcher
 from aiogram.client.default import DefaultBotProperties
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram.enums import ParseMode
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
+import redis.asyncio as redis
 
 import os
 from dotenv import load_dotenv
@@ -22,6 +24,9 @@ PG_USER = os.environ['PG_USER']
 PG_DB = os.environ['PG_DB']
 PG_PWD = os.environ['PG_PWD']
 
+client = redis.Redis.from_pool(redis.ConnectionPool.from_url("redis://redis:6379/0"))
+client_times = redis.Redis.from_pool(redis.ConnectionPool.from_url("redis://redis_timers:6379/0"))
+scheduler = AsyncIOScheduler(timezone='Europe/Moscow')
 bot = Bot(
     token=TELEGRAM_TOKEN, 
     default=DefaultBotProperties(parse_mode=ParseMode.MARKDOWN)
