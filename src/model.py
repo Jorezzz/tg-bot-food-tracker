@@ -32,11 +32,30 @@ async def make_request(headers, payload):
             return result["choices"][0]["message"]
 
 
-async def get_chatgpt_photo_description(b64_photo):
+async def get_chatgpt_photo_description(b64_photo, optional_text=None):
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {OPENAI_TOKEN}",
     }
+
+    if optional_text:
+        context = [
+            {
+                "type": "text",
+                "text": optional_text,
+            },
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{b64_photo}"},
+            },
+        ]
+    else:
+        context = [
+            {
+                "type": "image_url",
+                "image_url": {"url": f"data:image/jpeg;base64,{b64_photo}"},
+            },
+        ]
 
     payload = {
         "model": "gpt-4o-mini",
@@ -46,18 +65,8 @@ async def get_chatgpt_photo_description(b64_photo):
                 "content": [{"type": "text", "text": OPENAI_SYSTEM_PROMPT}],
             },
         ]
-        + [
-            {
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": f"data:image/jpeg;base64,{b64_photo}"},
-                    }
-                ],
-            }
-        ],
-        "max_tokens": 500,
+        + [{"role": "user", "content": context}],
+        "max_tokens": 1000,
         "response_format": {
             "type": "json_schema",
             "json_schema": {

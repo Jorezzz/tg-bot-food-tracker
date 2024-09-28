@@ -50,9 +50,11 @@ async def process_energy_limit(message: Message, state: FSMContext):
             == hashlib.sha256(str(ADMIN_PASSWORD).encode()).hexdigest()
         ):
             await register_user(message, role_id=3)
+            await message.delete()
             await message.answer(text="Добро пожаловать, повелитель")
         else:
             raise Exception("Wrong admin password")
     except Exception as e:
         logger.error(f"{e}")
+        await message.delete()
         await message.answer(text="Неверный пароль, уходи")

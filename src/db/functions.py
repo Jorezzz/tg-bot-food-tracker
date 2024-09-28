@@ -4,7 +4,6 @@ from config import logger
 from utils import convert_dict_from_bytes, convert_list_from_bytes, fill_null
 import pytz
 import datetime
-import hashlib
 
 FORMAT_STRING = "%Y-%m-%d %H:%M:%S"
 TZ = pytz.timezone("Europe/Moscow")
@@ -34,6 +33,7 @@ async def pg_log_message(message, model_output, image):
             "message_dttm": message_dttm,
             "user_id": user_id,
             "message_id": message_id,
+            "input_text": None,  # message.caption,
             "image": image,
             "resonse_raw": str(model_output),
         },
@@ -86,7 +86,7 @@ async def swap_time(user_id, hour, minute):
     user_data = await get_user(user_id)
     new_string = hour + "." + minute
     old_string = str(user_data["end_hour"]) + "." + str(user_data["end_minute"])
-    logger.info(f"{old_string=} {new_string=}")
+    # logger.info(f"{old_string=} {new_string=}")
     await update_user(user_id, {"end_hour": hour, "end_minute": minute})
     await client_times.sadd(new_string, str(user_id))
     await client_times.srem(old_string, str(user_id))
@@ -94,10 +94,10 @@ async def swap_time(user_id, hour, minute):
 
 async def finish_day_check_all_users():
     dttm = datetime.datetime.now(pytz.timezone("Europe/Moscow")).replace(tzinfo=None)
-    logger.info(f"{dttm=}")
+    # logger.info(f"{dttm=}")
     res = await client_times.smembers(str(dttm.hour) + "." + str(dttm.minute))
     res = convert_list_from_bytes(res)
-    logger.info(f"{res=}")
+    # logger.info(f"{res=}")
     for user in res:
         await finish_user_day(user, dttm)
 

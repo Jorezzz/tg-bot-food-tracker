@@ -3,6 +3,7 @@ CREATE TABLE IF NOT EXISTS messages
     message_dttm TIMESTAMP NOT NULL,
     user_id BIGINT NOT NULL,
     message_id BIGINT NOT NULL,
+    input_text TEXT,
     image TEXT,
     resonse_raw TEXT,
     PRIMARY KEY(user_id, message_id)

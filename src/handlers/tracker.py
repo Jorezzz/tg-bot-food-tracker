@@ -48,7 +48,12 @@ async def parse_photo(message: Message):
         file = await bot.get_file(message.photo[-1].file_id)
         await bot.download_file(file.file_path, file_in_io)
         b64_photo = encode_image(file_in_io.read())
-        response = await get_chatgpt_photo_description(b64_photo)
+
+        text = None  # message.caption
+        if text is not None:
+            response = await get_chatgpt_photo_description(b64_photo, text)
+        else:
+            response = await get_chatgpt_photo_description(b64_photo)
         model_output = eval(response["content"])
         output = form_output(model_output)
         await pg_log_message(message, model_output, b64_photo)
