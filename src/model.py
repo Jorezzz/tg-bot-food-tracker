@@ -1,25 +1,52 @@
 from aiohttp import ClientSession
+from functools import lru_cache
 from config import (
     OPENAI_TOKEN,
     logger,
     OPENAI_SYSTEM_PROMPT,
     OPENAI_SYSTEM_SUGGEST_PROMPT,
+    OPENAI_SYSTEM_END_DAY_SUGGEST_PROMPT,
 )
 
 
 def form_output(data):
     output = ""
-    message_total = 0
-    for _, dish in enumerate(data["dishes"]):
-        output += f"{dish['dish_name']}:\n"
-        dish_total = 0
-        for ingridient in dish["composition"]:
-            output += f"  {ingridient['ingridient_name']}: {ingridient['ingridient_mass_in_grams']} грамм - {ingridient['ingridient_callories']} каллорий\n"
-            dish_total += int(ingridient["ingridient_callories"])
-        output += f"В блюде {dish_total} каллорий\n\n"
-        message_total += dish_total
-    output += f"Всего {message_total} каллорий"
-    return output, message_total
+    energy_total = 0
+    proteins_total = 0
+    carbohydrates_total = 0
+    fats_total = 0
+    if len(data["dishes"]) > 0:
+        output += f"Блюда:\n"
+        for dish in data["dishes"]:
+            output += f"{dish['dish_name']}:\n"
+            output += f"    Вес: {dish['dish_mass_in_gramms']} грамм - {dish['dish_callories']} ккал\n"
+            output += f"    Белки {dish['dish_proteins']}\n"
+            output += f"    Углеводы {dish['dish_carbohydrates']}\n"
+            output += f"    Жиры {dish['dish_fats']}\n\n"
+            energy_total += int(dish["dish_callories"])
+            proteins_total += int(dish["dish_proteins"])
+            carbohydrates_total += int(dish["dish_carbohydrates"])
+            fats_total += int(dish["dish_fats"])
+    if len(data["drinks"]) > 0:
+        output += f"Напитки:\n"
+        for dish in data["drinks"]:
+            output += f"{dish['drink_name']}:\n"
+            output += f"    Обьём: {dish['drink_volume_in_milliliters']} грамм - {dish['drink_callories']} ккал\n"
+            output += f"    Белки {dish['drink_proteins']}\n"
+            output += f"    Углеводы {dish['drink_carbohydrates']}\n"
+            output += f"    Жиры {dish['drink_fats']}\n\n"
+            energy_total += int(dish["drink_callories"])
+            proteins_total += int(dish["drink_proteins"])
+            carbohydrates_total += int(dish["drink_carbohydrates"])
+            fats_total += int(dish["drink_fats"])
+    output += f"Всего {energy_total} каллорий"
+    return {
+        "output_text": output,
+        "energy_total": energy_total,
+        "proteins_total": proteins_total,
+        "carbohydrates_total": carbohydrates_total,
+        "fats_total": fats_total,
+    }
 
 
 async def make_request(headers, payload):
@@ -70,7 +97,7 @@ async def get_chatgpt_photo_description(b64_photo, optional_text=None):
         "response_format": {
             "type": "json_schema",
             "json_schema": {
-                "name": "dish_composition",
+                "name": "meal_composition",
                 "strict": True,
                 "schema": {
                     "type": "object",
@@ -80,35 +107,49 @@ async def get_chatgpt_photo_description(b64_photo, optional_text=None):
                             "items": {
                                 "type": "object",
                                 "properties": {
-                                    "composition": {
-                                        "type": "array",
-                                        "items": {
-                                            "type": "object",
-                                            "properties": {
-                                                "ingridient_name": {"type": "string"},
-                                                "ingridient_mass_in_grams": {
-                                                    "type": "number"
-                                                },
-                                                "ingridient_callories": {
-                                                    "type": "number"
-                                                },
-                                            },
-                                            "required": [
-                                                "ingridient_name",
-                                                "ingridient_mass_in_grams",
-                                                "ingridient_callories",
-                                            ],
-                                            "additionalProperties": False,
-                                        },
-                                    },
                                     "dish_name": {"type": "string"},
+                                    "dish_mass_in_gramms": {"type": "number"},
+                                    "dish_callories": {"type": "number"},
+                                    "dish_proteins": {"type": "number"},
+                                    "dish_carbohydrates": {"type": "number"},
+                                    "dish_fats": {"type": "number"},
                                 },
-                                "required": ["composition", "dish_name"],
+                                "required": [
+                                    "dish_name",
+                                    "dish_mass_in_gramms",
+                                    "dish_callories",
+                                    "dish_proteins",
+                                    "dish_carbohydrates",
+                                    "dish_fats",
+                                ],
+                                "additionalProperties": False,
+                            },
+                        },
+                        "drinks": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "drink_name": {"type": "string"},
+                                    "drink_volume_in_milliliters": {"type": "number"},
+                                    "drink_callories": {"type": "number"},
+                                    "drink_proteins": {"type": "number"},
+                                    "drink_carbohydrates": {"type": "number"},
+                                    "drink_fats": {"type": "number"},
+                                },
+                                "required": [
+                                    "drink_name",
+                                    "drink_volume_in_milliliters",
+                                    "drink_callories",
+                                    "drink_proteins",
+                                    "drink_carbohydrates",
+                                    "drink_fats",
+                                ],
                                 "additionalProperties": False,
                             },
                         },
                     },
-                    "required": ["dishes"],
+                    "required": ["dishes", "drinks"],
                     "additionalProperties": False,
                 },
             },
@@ -119,7 +160,8 @@ async def get_chatgpt_photo_description(b64_photo, optional_text=None):
     return response
 
 
-async def get_chatgpt_remaining_energy_suggestion(current_energy, remaining_energy):
+@lru_cache()
+async def get_chatgpt_remaining_energy_suggestion(remaining_energy):
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {OPENAI_TOKEN}",
@@ -145,15 +187,82 @@ async def get_chatgpt_remaining_energy_suggestion(current_energy, remaining_ener
                     {
                         "type": "text",
                         "text": (
-                            f"Текущее количество каллорий {current_energy}, осталось до дневного лимита {remaining_energy}"
+                            f"Осталось до дневного лимита {remaining_energy}"
                             if remaining_energy > 0
-                            else f"Текущее количество каллорий {current_energy}, дневной лимит превышен на {remaining_energy}"
+                            else f"Дневной лимит превышен на {abs(remaining_energy)}"
                         ),
                     }
                 ],
             }
         ],
         "max_tokens": 500,
+    }
+
+    response = await make_request(headers, payload)
+    return response["content"]
+
+
+async def get_chatgpt_end_day_suggestion(
+    dish_history,
+    remaining_energy,
+    remaining_proteins,
+    remaining_carbohydrates,
+    remaining_fats,
+):
+    dishes = ", ".join([x["dish_name"] for x in dish_history])
+    energy = (
+        f"До лимита по каллориям осталось {remaining_energy}"
+        if remaining_energy > 0
+        else f"Лимит калллорий превышен на {abs(remaining_energy)}"
+    )
+    proteins = (
+        f"До лимита по белкам осталось {remaining_proteins}"
+        if remaining_proteins > 0
+        else f"Лимит белков превышен на {abs(remaining_proteins)}"
+    )
+    carbohydrates = (
+        f"До лимита по углеводам осталось {remaining_carbohydrates}"
+        if remaining_carbohydrates > 0
+        else f"Лимит углеводов превышен на {abs(remaining_carbohydrates)}"
+    )
+    fats = (
+        f"До лимита по жирам осталось {remaining_fats}"
+        if remaining_fats > 0
+        else f"Лимит по жирам превышен на {abs(remaining_fats)}"
+    )
+
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {OPENAI_TOKEN}",
+    }
+
+    payload = {
+        "model": "gpt-4o-mini",
+        "messages": [
+            {
+                "role": "system",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": OPENAI_SYSTEM_END_DAY_SUGGEST_PROMPT,
+                    }
+                ],
+            },
+        ]
+        + [
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": (
+                            f"Блюда за день {dishes}. {energy}. {proteins}. {carbohydrates}. {fats}."
+                        ),
+                    }
+                ],
+            }
+        ],
+        "max_tokens": 1000,
     }
 
     response = await make_request(headers, payload)

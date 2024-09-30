@@ -13,10 +13,12 @@ CREATE TABLE IF NOT EXISTS dishes
 (
     user_id BIGINT NOT NULL,
     message_id BIGINT NOT NULL,
-    dish_name VARCHAR(255),
-    ingridient_name VARCHAR(255),
-    ingridient_mass INTEGER,
-    ingridient_energy INTEGER
+    name VARCHAR(255),
+    quantity INTEGER,
+    callories INTEGER,
+    proteins INTEGER,
+    carbohydrates INTEGER,
+    fats INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS daily_energy
@@ -26,5 +28,11 @@ CREATE TABLE IF NOT EXISTS daily_energy
     user_id BIGINT NOT NULL,
     current_energy INTEGER DEFAULT 0,
     energy_limit INTEGER DEFAULT 0,
+    current_proteins INTEGER DEFAULT 0,
+    proteins_limit INTEGER DEFAULT 0,
+    current_carbohydrates INTEGER DEFAULT 0,
+    carbohydrates_limit INTEGER DEFAULT 0,
+    current_fats INTEGER DEFAULT 0,
+    fats_limit INTEGER DEFAULT 0,
     PRIMARY KEY(dttm_started_dttm, user_id)
 );

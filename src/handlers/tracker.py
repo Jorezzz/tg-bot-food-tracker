@@ -10,7 +10,7 @@ from model import (
     get_chatgpt_remaining_energy_suggestion,
     form_output,
 )
-from db.functions import add_daily_energy, get_user, update_user, pg_log_message
+from db.functions import add_meal_energy, get_user, update_user, pg_log_message
 from aiogram.utils.chat_action import ChatActionSender
 
 
@@ -26,8 +26,9 @@ async def get_daily_total(message: Message):
             text=f"Дневной лимит каллорий {user_data['current_energy']} из {user_data['energy_limit']}"
         )
         suggestion = await get_chatgpt_remaining_energy_suggestion(
-            user_data["current_energy"],
-            int(user_data["energy_limit"]) - int(user_data["current_energy"]),
+            round(
+                int(user_data["energy_limit"]) - int(user_data["current_energy"]), -1
+            ),
         )
         await message.answer(text=suggestion)
     except Exception as e:
@@ -59,5 +60,11 @@ async def parse_photo(message: Message):
         await pg_log_message(message, model_output, b64_photo)
         await update_user(user_id, {"last_image_message_id": message.message_id})
 
-        await add_daily_energy(user_id, output[1])
-        await message.answer(text=output[0])
+        await add_meal_energy(
+            user_id,
+            output["energy_total"],
+            output["proteins_total"],
+            output["carbohydrates_total"],
+            output["fats_total"],
+        )
+        await message.answer(text=output["output_text"])

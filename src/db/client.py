@@ -26,3 +26,18 @@ class PGClient:
         """
         async with self.pool.acquire() as con:
             await con.executemany(query, values)
+
+    async def select_dish_history(self, dttm):
+        async with self.pool.acquire() as con:
+            rows = await con.fetch(
+                """
+                SELECT * 
+                FROM 
+                    dishes as t1
+                    INNER JOIN messages as t2 ON t1.user_id = t2.user_id AND t1.message_id = t2.message_id
+                WHERE 
+                    t2.message_dttm >= $1
+            """,
+                dttm,
+            )
+            return rows

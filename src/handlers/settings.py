@@ -2,7 +2,7 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from db.functions import update_user, swap_time
+from db.functions import update_user, swap_time, get_pfc_limits_from_callories_limit
 from keyboard import settings_keyboard, main_keyboard
 
 
@@ -65,7 +65,16 @@ async def start_updating_daily_limit(message: Message, state: FSMContext):
 async def process_energy_limit(message: Message, state: FSMContext):
     await state.clear()
     try:
-        await update_user(message.from_user.id, {"energy_limit": int(message.text)})
+        limits = get_pfc_limits_from_callories_limit(int(message.text))
+        await update_user(
+            message.from_user.id,
+            {
+                "energy_limit": int(message.text),
+                "proteins_limit": limits["proteins_limit"],
+                "carbohydrates_limit": limits["carbohydrates_limit"],
+                "fats_limit": limits["fats_limit"],
+            },
+        )
         await message.answer(text="Дневной лимит изменён")
     except ValueError:
         await message.answer(text="Неверный формат ввода")
