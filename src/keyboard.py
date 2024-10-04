@@ -4,7 +4,8 @@ from auth.utils import permission_allowed
 
 async def main_keyboard(user_id, is_persistent=True):
     kb_list = [
-        [KeyboardButton(text="Статус за день"), KeyboardButton(text="Настройки")]
+        [KeyboardButton(text="Статус за день"), KeyboardButton(text="Настройки")],
+        [KeyboardButton(text="Помощь")],
     ]
     is_allowed = await permission_allowed(user_id, 1)
     if not is_allowed:

@@ -23,7 +23,7 @@ async def get_daily_total(message: Message):
     try:
         user_data = await get_user(message.from_user.id)
         await message.answer(
-            text=f"Дневной лимит каллорий {user_data['current_energy']} из {user_data['energy_limit']}"
+            text=f"Дневной лимит калорий {user_data['current_energy']} из {user_data['energy_limit']}"
         )
         suggestion = await get_chatgpt_remaining_energy_suggestion(
             round(

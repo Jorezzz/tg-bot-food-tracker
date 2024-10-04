@@ -58,7 +58,7 @@ async def process_finish_day(message: Message, state: FSMContext):
 async def start_updating_daily_limit(message: Message, state: FSMContext):
     await state.set_state(EnergyLimitForm.energy_limit)
     kb = await main_keyboard(message.from_user.id)
-    await message.reply("Укажите новый лимит каллорий", reply_markup=kb)
+    await message.reply("Укажите новый лимит калорий", reply_markup=kb)
 
 
 @settings_router.message(EnergyLimitForm.energy_limit)

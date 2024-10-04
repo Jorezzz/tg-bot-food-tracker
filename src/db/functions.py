@@ -189,7 +189,7 @@ async def finish_user_day(user_id, dttm):
         int(user_data["carbohydrates_limit"]) - int(user_data["current_carbohydrates"]),
         int(user_data["fats_limit"]) - int(user_data["current_fats"]),
     )
-    results = f'Итоги за день:\nКаллории {user_data["current_energy"]}/{user_data["energy_limit"]}\nБелки {user_data["current_proteins"]}/{user_data["proteins_limit"]}\nЖиры {user_data["current_fats"]}/{user_data["fats_limit"]}\nУглеводы {user_data["current_carbohydrates"]}/{user_data["carbohydrates_limit"]}'
+    results = f'Итоги за день:\nКалории {user_data["current_energy"]}/{user_data["energy_limit"]}\nБелки {user_data["current_proteins"]}/{user_data["proteins_limit"]}\nЖиры {user_data["current_fats"]}/{user_data["fats_limit"]}\nУглеводы {user_data["current_carbohydrates"]}/{user_data["carbohydrates_limit"]}'
     await bot(
         SendMessage(chat_id=int(user_id), text=results, disable_notification=True)
     )

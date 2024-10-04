@@ -39,7 +39,7 @@ def form_output(data):
             proteins_total += int(dish["drink_proteins"])
             carbohydrates_total += int(dish["drink_carbohydrates"])
             fats_total += int(dish["drink_fats"])
-    output += f"Всего {energy_total} каллорий"
+    output += f"Всего {energy_total} калорий"
     return {
         "output_text": output,
         "energy_total": energy_total,
@@ -211,7 +211,7 @@ async def get_chatgpt_end_day_suggestion(
 ):
     dishes = ", ".join([x["dish_name"] for x in dish_history])
     energy = (
-        f"До лимита по каллориям осталось {remaining_energy}"
+        f"До лимита по калориям осталось {remaining_energy}"
         if remaining_energy > 0
         else f"Лимит калллорий превышен на {abs(remaining_energy)}"
     )
