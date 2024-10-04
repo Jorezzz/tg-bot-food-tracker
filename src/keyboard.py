@@ -2,14 +2,14 @@ from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 from auth.utils import permission_allowed
 
 
-async def main_keyboard(user_id, is_persistent=True):
+def main_keyboard(is_persistent=True):
     kb_list = [
         [KeyboardButton(text="Статус за день"), KeyboardButton(text="Настройки")],
         [KeyboardButton(text="Помощь")],
     ]
-    is_allowed = await permission_allowed(user_id, 1)
-    if not is_allowed:
-        kb_list = [[KeyboardButton(text="Регистрация")]] + kb_list
+    # is_allowed = await permission_allowed(user_id, 1)
+    # if not is_allowed:
+    #     kb_list = [[KeyboardButton(text="Регистрация")]] + kb_list
     return ReplyKeyboardMarkup(
         is_persistent=is_persistent,
         keyboard=kb_list,
@@ -19,7 +19,7 @@ async def main_keyboard(user_id, is_persistent=True):
     )
 
 
-async def settings_keyboard():
+def settings_keyboard():
     kb_list = [
         [KeyboardButton(text="Изменить дневной лимит")],
         [KeyboardButton(text="Изменить время окончания дня")],

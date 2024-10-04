@@ -67,7 +67,7 @@ def get_pfc_limits_from_callories_limit(energy_limit):
 async def register_user(
     message, current_energy=0, energy_limit=1500, role_id=1, end_hour=0, end_minute=0
 ):
-    logger.info(f"{message.__dict__}")
+    # logger.info(f"{message.__dict__}")
     user_id = message.from_user.id
     username = message.from_user.username
     first_name = message.from_user.first_name
