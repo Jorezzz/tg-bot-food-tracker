@@ -1,5 +1,5 @@
 from aiohttp import ClientSession
-from functools import lru_cache
+from async_lru import alru_cache
 from config import (
     OPENAI_TOKEN,
     logger,
@@ -56,7 +56,7 @@ async def make_request(headers, payload):
         ) as response:
             result = await response.json()
             logger.info(f"{result}")
-            return result["choices"][0]["message"]
+            return result
 
 
 async def get_chatgpt_photo_description(b64_photo, optional_text=None):
@@ -157,16 +157,15 @@ async def get_chatgpt_photo_description(b64_photo, optional_text=None):
     }
 
     response = await make_request(headers, payload)
-    return response
+    return response["choices"][0]["message"]
 
 
-@lru_cache()
+@alru_cache(maxsize=150)
 async def get_chatgpt_remaining_energy_suggestion(remaining_energy):
     headers = {
         "Content-Type": "application/json",
         "Authorization": f"Bearer {OPENAI_TOKEN}",
     }
-
     payload = {
         "model": "gpt-4o-mini",
         "messages": [
@@ -197,9 +196,8 @@ async def get_chatgpt_remaining_energy_suggestion(remaining_energy):
         ],
         "max_tokens": 500,
     }
-
     response = await make_request(headers, payload)
-    return response["content"]
+    return response["choices"][0]["message"]["content"]
 
 
 async def get_chatgpt_end_day_suggestion(
@@ -264,6 +262,5 @@ async def get_chatgpt_end_day_suggestion(
         ],
         "max_tokens": 1000,
     }
-
     response = await make_request(headers, payload)
-    return response["content"]
+    return response["choices"][0]["message"]["content"]

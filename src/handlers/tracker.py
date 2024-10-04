@@ -1,7 +1,7 @@
 from aiogram import Router, F
 from aiogram.types import Message
 from create_bot import bot
-from config import logger, OPENAI_TOKEN
+from config import logger
 from auth.utils import permission_allowed
 import io
 from utils import encode_image
@@ -12,6 +12,7 @@ from model import (
 )
 from db.functions import add_meal_energy, get_user, update_user, pg_log_message
 from aiogram.utils.chat_action import ChatActionSender
+from keyboard import main_keyboard
 
 
 tracker_router = Router()
@@ -30,10 +31,10 @@ async def get_daily_total(message: Message):
                 int(user_data["energy_limit"]) - int(user_data["current_energy"]), -1
             ),
         )
-        await message.answer(text=suggestion)
+        await message.answer(text=suggestion, reply_markup=main_keyboard())
     except Exception as e:
         logger.error(f"{e}")
-        await message.answer(text="Some error ocured")
+        await message.answer(text="Some error ocured", reply_markup=main_keyboard())
 
 
 @tracker_router.message(F.photo)
@@ -41,7 +42,7 @@ async def parse_photo(message: Message):
     user_id = message.from_user.id
     is_allowed = await permission_allowed(user_id, 1)
     if not is_allowed:
-        await message.answer("Недостаточно прав")
+        await message.answer("Недостаточно прав", reply_markup=main_keyboard())
         return None
 
     async with ChatActionSender.typing(bot=bot, chat_id=user_id):
@@ -67,4 +68,4 @@ async def parse_photo(message: Message):
             output["carbohydrates_total"],
             output["fats_total"],
         )
-        await message.answer(text=output["output_text"])
+        await message.answer(text=output["output_text"], reply_markup=main_keyboard())

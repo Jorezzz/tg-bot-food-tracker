@@ -4,3 +4,4 @@ python-dotenv
 apscheduler
 redis
 asyncpg
+async-lru

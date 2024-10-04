@@ -114,4 +114,4 @@ async def help_message(message: Message):
 **В: Какие еще возможности есть у бота?**
 **О: Бот также может предоставить общие советы по питанию и сохранить историю ваших анализов для отслеживания рациона.**
 """
-    await message.answer(text=text)
+    await message.answer(text=text, reply_markup=main_keyboard())
