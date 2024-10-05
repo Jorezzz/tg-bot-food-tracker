@@ -21,6 +21,7 @@ services:
       - POSTGRES_DB=prod
     volumes:
       - ./databases:/docker-entrypoint-initdb.d
+      - ./pg_data:/var/lib/postgresql/data
 
   redis:
     image: redis:latest
