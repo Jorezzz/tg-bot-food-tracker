@@ -12,6 +12,20 @@ class PGClient:
         idxs = ", ".join([f"${i+1}" for i in range(len(data))])
         return columns, idxs
 
+    def _prepare_where_query(self, data: Dict[str, Any], additive=0):
+        query = "WHERE "
+        query += " AND ".join(
+            [f"{k_v[0]} = ${i+1+additive}" for i, k_v in enumerate(data.items())]
+        )
+        return query
+
+    def _prepare_update_query(self, data: Dict[str, Any], additive=0):
+        query = "SET "
+        query += ", ".join(
+            [f"{k_v[0]} = ${i+1+additive}" for i, k_v in enumerate(data.items())]
+        )
+        return query
+
     async def execute(self, query, *args, **kwargs):
         async with self.pool.acquire() as con:
             await con.execute(query, *args, **kwargs)
@@ -27,6 +41,42 @@ class PGClient:
         async with self.pool.acquire() as con:
             await con.executemany(query, values)
 
+    async def select_dish(self, user_id, message_id, dish_name):
+        async with self.pool.acquire() as con:
+            rows = await con.fetchrow(
+                """
+                SELECT * 
+                FROM dishes
+                WHERE 
+                    user_id = $1 AND message_id = $2 AND name = $3
+            """,
+                int(user_id),
+                int(message_id),
+                dish_name,
+            )
+            return rows
+
+    async def update(self, table_name, where_dict, update_dict):
+        update_query = self._prepare_update_query(update_dict)
+        additive = len(update_dict)
+        where_query = self._prepare_where_query(where_dict, additive)
+        values = list(update_dict.values()) + list(where_dict.values())
+        await self.execute(
+            f"""
+                UPDATE {table_name} {update_query}
+                {where_query}
+            """,
+            *values,
+        )
+
+    async def update_dish(self, user_id, message_id, dish_name, update_dict):
+        where_dict = {
+            "user_id": int(user_id),
+            "message_id": int(message_id),
+            "name": dish_name,
+        }
+        await self.update("dishes", where_dict, update_dict)
+
     async def select_dish_history(self, dttm):
         async with self.pool.acquire() as con:
             rows = await con.fetch(
@@ -36,7 +86,7 @@ class PGClient:
                     dishes as t1
                     INNER JOIN messages as t2 ON t1.user_id = t2.user_id AND t1.message_id = t2.message_id
                 WHERE 
-                    t2.message_dttm >= $1
+                    t2.message_dttm >= $1 AND t1.included
             """,
                 dttm,
             )

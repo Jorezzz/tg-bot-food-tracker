@@ -18,7 +18,8 @@ CREATE TABLE IF NOT EXISTS dishes
     callories INTEGER,
     proteins INTEGER,
     carbohydrates INTEGER,
-    fats INTEGER
+    fats INTEGER,
+    included BOOLEAN DEFAULT TRUE
 );
 
 CREATE TABLE IF NOT EXISTS daily_energy

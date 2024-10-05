@@ -1,5 +1,7 @@
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery
+from aiogram.fsm.context import FSMContext
+from aiogram.fsm.state import State, StatesGroup
 from create_bot import bot
 from config import logger
 from auth.utils import permission_allowed
@@ -10,9 +12,23 @@ from model import (
     get_chatgpt_remaining_energy_suggestion,
     form_output,
 )
-from db.functions import add_meal_energy, get_user, update_user, pg_log_message
+from db.functions import (
+    add_meal_energy,
+    get_user,
+    update_user,
+    pg_log_message,
+    remove_dish_from_user_day,
+    update_dish_quantity,
+)
 from aiogram.utils.chat_action import ChatActionSender
-from keyboard import main_keyboard
+from keyboard import main_keyboard, dishes_keyboard, remove_or_edit_keyboard
+
+
+class NewDishQuantityForm(StatesGroup):
+    quantity = State()
+    user_id = State()
+    message_id = State()
+    dish_name = State()
 
 
 tracker_router = Router()
@@ -68,4 +84,63 @@ async def parse_photo(message: Message):
             output["carbohydrates_total"],
             output["fats_total"],
         )
-        await message.answer(text=output["output_text"], reply_markup=main_keyboard())
+        await message.answer(
+            text=output["output_text"],
+            reply_markup=dishes_keyboard(
+                message.from_user.id,
+                message.message_id,
+                model_output["dishes"] + model_output["drinks"],
+            ),
+        )
+
+
+@tracker_router.callback_query(F.data.startswith("options_"))
+async def options_dishes(call: CallbackQuery):
+    await call.answer()
+    user_id = call.data.split("_")[1]
+    message_id = call.data.split("_")[2]
+    dish_name = "".join(call.data.split("_")[3:])
+    await call.message.answer(
+        f"Выберите действие c {dish_name}",
+        reply_markup=remove_or_edit_keyboard(user_id, message_id, dish_name),
+    )
+
+
+@tracker_router.callback_query(F.data.startswith("delete_"))
+async def options_dishes_delete(call: CallbackQuery):
+    await call.answer()
+    user_id = call.data.split("_")[1]
+    message_id = call.data.split("_")[2]
+    dish_name = "".join(call.data.split("_")[3:])
+    await remove_dish_from_user_day(user_id, message_id, dish_name)
+    await call.message.answer(f"{dish_name} успешно удалено")
+
+
+@tracker_router.callback_query(F.data.startswith("edit_"))
+async def options_dishes_edit(call: CallbackQuery, state: FSMContext):
+    await call.answer()
+    user_id = call.data.split("_")[1]
+    message_id = call.data.split("_")[2]
+    dish_name = "".join(call.data.split("_")[3:])
+    await state.update_data(user_id=user_id)
+    await state.update_data(message_id=message_id)
+    await state.update_data(dish_name=dish_name)
+    await state.set_state(NewDishQuantityForm.quantity)
+    await call.message.answer("Укажите новый вес блюда в граммах (миллилитрах)")
+
+
+@tracker_router.message(NewDishQuantityForm.quantity)
+async def edit_dish(message: Message, state: FSMContext):
+    data = await state.get_data()
+    await state.clear()
+    try:
+        await update_dish_quantity(
+            data.get("user_id"),
+            data.get("message_id"),
+            data.get("dish_name"),
+            int(message.text),
+        )
+        await message.answer(text="Вес изменён")
+    except Exception as e:
+        logger.error(f"{e}")
+        await message.answer(text="Неверный формат ввода")
