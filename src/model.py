@@ -59,7 +59,6 @@ async def make_request(headers, payload):
             return result
 
 
-@alru_cache(150)
 async def get_chatgpt_photo_description(b64_photo, optional_text=None):
     headers = {
         "Content-Type": "application/json",
