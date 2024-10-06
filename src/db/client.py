@@ -41,18 +41,18 @@ class PGClient:
         async with self.pool.acquire() as con:
             await con.executemany(query, values)
 
-    async def select_dish(self, user_id, message_id, dish_name):
+    async def select_dish(self, user_id, message_id, dish_id):
         async with self.pool.acquire() as con:
             rows = await con.fetchrow(
                 """
                 SELECT * 
                 FROM dishes
                 WHERE 
-                    user_id = $1 AND message_id = $2 AND name = $3
+                    user_id = $1 AND message_id = $2 AND dish_id = $3
             """,
                 int(user_id),
                 int(message_id),
-                dish_name,
+                int(dish_id),
             )
             return rows
 
@@ -69,11 +69,11 @@ class PGClient:
             *values,
         )
 
-    async def update_dish(self, user_id, message_id, dish_name, update_dict):
+    async def update_dish(self, user_id, message_id, dish_id, update_dict):
         where_dict = {
             "user_id": int(user_id),
             "message_id": int(message_id),
-            "name": dish_name,
+            "dish_id": int(dish_id),
         }
         await self.update("dishes", where_dict, update_dict)
 

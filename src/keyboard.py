@@ -5,6 +5,7 @@ from aiogram.types import (
     InlineKeyboardButton,
 )
 from config import logger
+from utils import hash
 
 
 def main_keyboard(is_persistent=True):
@@ -38,7 +39,7 @@ def settings_keyboard():
     )
 
 
-def dishes_keyboard(user_id, message_id, dishes_and_drinks):
+def dishes_keyboard(message_id, dishes_and_drinks):
     counter = 0
     inline_kb_list = []
     data = []
@@ -49,7 +50,7 @@ def dishes_keyboard(user_id, message_id, dishes_and_drinks):
                 callback_data="options_"
                 + str(message_id)
                 + "_"
-                + str(dd.get("drink_name") or dd.get("dish_name")),
+                + str(hash((dd.get("drink_name")) or dd.get("dish_name"))),
             )
         )
         counter += 1
@@ -59,21 +60,20 @@ def dishes_keyboard(user_id, message_id, dishes_and_drinks):
             data = []
     if len(data) > 0:
         inline_kb_list.append(data)
-    logger.info(f"{inline_kb_list}")
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 
 
-def remove_or_edit_keyboard(user_id, message_id, dish_name):
+def remove_or_edit_keyboard(message_id, dish_id):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
                     text="Удалить",
-                    callback_data="delete_" + str(message_id) + "_" + dish_name,
+                    callback_data="delete_" + str(message_id) + "_" + str(dish_id),
                 ),
                 InlineKeyboardButton(
                     text="Изменить вес",
-                    callback_data="edit_" + str(message_id) + "_" + dish_name,
+                    callback_data="edit_" + str(message_id) + "_" + str(dish_id),
                 ),
             ]
         ]

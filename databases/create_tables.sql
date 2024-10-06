@@ -14,6 +14,7 @@ CREATE TABLE IF NOT EXISTS dishes
     user_id BIGINT NOT NULL,
     message_id BIGINT NOT NULL,
     name VARCHAR(255),
+    dish_id BIGINT,
     quantity INTEGER,
     callories INTEGER,
     proteins INTEGER,

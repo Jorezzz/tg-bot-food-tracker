@@ -1,7 +1,7 @@
 from create_bot import client, client_times, dp, bot
 from aiogram.methods.send_message import SendMessage
 from config import logger
-from utils import convert_dict_from_bytes, convert_list_from_bytes, fill_null
+from utils import convert_dict_from_bytes, convert_list_from_bytes, fill_null, hash
 from model import get_chatgpt_end_day_suggestion
 import pytz
 import datetime
@@ -26,6 +26,7 @@ async def pg_log_message(message, model_output, image):
                 "proteins": dish["dish_proteins"],
                 "carbohydrates": dish["dish_carbohydrates"],
                 "fats": dish["dish_fats"],
+                "dish_id": hash(dish["dish_name"]),
             }
         )
     for dish in model_output["drinks"]:
@@ -39,6 +40,7 @@ async def pg_log_message(message, model_output, image):
                 "proteins": dish["drink_proteins"],
                 "carbohydrates": dish["drink_carbohydrates"],
                 "fats": dish["drink_fats"],
+                "dish_id": hash(dish["drink_name"]),
             }
         )
     pg_client = dp["pg_client"]
@@ -197,10 +199,17 @@ async def finish_user_day(user_id, dttm):
     await bot(SendMessage(chat_id=int(user_id), text=text, disable_notification=True))
 
 
-async def remove_dish_from_user_day(user_id, message_id, dish_name):
+async def get_dish_by_id(user_id, message_id, dish_id):
     user_data = await get_user(user_id)
     pg_client = dp["pg_client"]
-    dish_params = await pg_client.select_dish(user_id, message_id, dish_name)
+    dish_params = await pg_client.select_dish(user_id, message_id, dish_id)
+    return dish_params
+
+
+async def remove_dish_from_user_day(user_id, message_id, dish_id):
+    user_data = await get_user(user_id)
+    pg_client = dp["pg_client"]
+    dish_params = await pg_client.select_dish(user_id, message_id, dish_id)
     await update_user(
         user_id,
         update_dict={
@@ -214,14 +223,14 @@ async def remove_dish_from_user_day(user_id, message_id, dish_name):
         },
     )
     await pg_client.update_dish(
-        user_id, message_id, dish_name, update_dict={"included": False}
+        user_id, message_id, dish_id, update_dict={"included": False}
     )
 
 
-async def update_dish_quantity(user_id, message_id, dish_name, new_quantity):
+async def update_dish_quantity(user_id, message_id, dish_id, new_quantity):
     user_data = await get_user(user_id)
     pg_client = dp["pg_client"]
-    dish_params = await pg_client.select_dish(user_id, message_id, dish_name)
+    dish_params = await pg_client.select_dish(user_id, message_id, dish_id)
     dish_new_energy = int(
         float(new_quantity) / float(dish_params["quantity"]) * dish_params["callories"]
     )
@@ -256,7 +265,7 @@ async def update_dish_quantity(user_id, message_id, dish_name, new_quantity):
     await pg_client.update_dish(
         user_id,
         message_id,
-        dish_name,
+        dish_id,
         update_dict={
             "quantity": new_quantity,
             "callories": dish_new_energy,

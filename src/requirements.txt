@@ -5,3 +5,4 @@ apscheduler
 redis
 asyncpg
 async-lru
+cityhash

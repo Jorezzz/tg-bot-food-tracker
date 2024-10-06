@@ -6,6 +6,7 @@ from config import (
     OPENAI_SYSTEM_PROMPT,
     OPENAI_SYSTEM_SUGGEST_PROMPT,
     OPENAI_SYSTEM_END_DAY_SUGGEST_PROMPT,
+    MODEL,
 )
 
 
@@ -86,7 +87,7 @@ async def get_chatgpt_photo_description(b64_photo, optional_text=None):
         ]
 
     payload = {
-        "model": "gpt-4o-mini",
+        "model": MODEL,
         "messages": [
             {
                 "role": "system",
@@ -168,7 +169,7 @@ async def get_chatgpt_remaining_energy_suggestion(remaining_energy):
         "Authorization": f"Bearer {OPENAI_TOKEN}",
     }
     payload = {
-        "model": "gpt-4o-mini",
+        "model": MODEL,
         "messages": [
             {
                 "role": "system",
@@ -236,7 +237,7 @@ async def get_chatgpt_end_day_suggestion(
     }
 
     payload = {
-        "model": "gpt-4o-mini",
+        "model": MODEL,
         "messages": [
             {
                 "role": "system",

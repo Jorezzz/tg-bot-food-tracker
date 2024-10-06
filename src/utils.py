@@ -1,4 +1,5 @@
 import base64
+from farmhash import Fingerprint32
 
 
 def convert_dict_from_bytes(map):
@@ -20,3 +21,7 @@ def fill_null(x, another):
 
 def encode_image(image):
     return base64.b64encode(image).decode("utf-8")
+
+
+def hash(input_string):
+    return Fingerprint32(input_string) if input_string is not None else None
