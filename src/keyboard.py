@@ -4,6 +4,7 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
+from config import logger
 
 
 def main_keyboard(is_persistent=True):
@@ -46,8 +47,6 @@ def dishes_keyboard(user_id, message_id, dishes_and_drinks):
             InlineKeyboardButton(
                 text=dd.get("drink_name") or dd.get("dish_name"),
                 callback_data="options_"
-                + str(user_id)
-                + "_"
                 + str(message_id)
                 + "_"
                 + str(dd.get("drink_name") or dd.get("dish_name")),
@@ -60,6 +59,7 @@ def dishes_keyboard(user_id, message_id, dishes_and_drinks):
             data = []
     if len(data) > 0:
         inline_kb_list.append(data)
+    logger.info(f"{inline_kb_list}")
     return InlineKeyboardMarkup(inline_keyboard=inline_kb_list)
 
 
@@ -69,21 +69,11 @@ def remove_or_edit_keyboard(user_id, message_id, dish_name):
             [
                 InlineKeyboardButton(
                     text="Удалить",
-                    callback_data="delete_"
-                    + str(user_id)
-                    + "_"
-                    + str(message_id)
-                    + "_"
-                    + dish_name,
+                    callback_data="delete_" + str(message_id) + "_" + dish_name,
                 ),
                 InlineKeyboardButton(
                     text="Изменить вес",
-                    callback_data="edit_"
-                    + str(user_id)
-                    + "_"
-                    + str(message_id)
-                    + "_"
-                    + dish_name,
+                    callback_data="edit_" + str(message_id) + "_" + dish_name,
                 ),
             ]
         ]

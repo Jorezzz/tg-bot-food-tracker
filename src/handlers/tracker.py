@@ -97,9 +97,9 @@ async def parse_photo(message: Message):
 @tracker_router.callback_query(F.data.startswith("options_"))
 async def options_dishes(call: CallbackQuery):
     await call.answer()
-    user_id = call.data.split("_")[1]
-    message_id = call.data.split("_")[2]
-    dish_name = "".join(call.data.split("_")[3:])
+    user_id = str(call.from_user.id)
+    message_id = call.data.split("_")[1]
+    dish_name = "".join(call.data.split("_")[2:])
     await call.message.answer(
         f"Выберите действие c {dish_name}",
         reply_markup=remove_or_edit_keyboard(user_id, message_id, dish_name),
@@ -109,9 +109,9 @@ async def options_dishes(call: CallbackQuery):
 @tracker_router.callback_query(F.data.startswith("delete_"))
 async def options_dishes_delete(call: CallbackQuery):
     await call.answer()
-    user_id = call.data.split("_")[1]
-    message_id = call.data.split("_")[2]
-    dish_name = "".join(call.data.split("_")[3:])
+    user_id = str(call.from_user.id)
+    message_id = call.data.split("_")[1]
+    dish_name = "".join(call.data.split("_")[2:])
     await remove_dish_from_user_day(user_id, message_id, dish_name)
     await call.message.answer(f"{dish_name} успешно удалено")
 
@@ -119,9 +119,9 @@ async def options_dishes_delete(call: CallbackQuery):
 @tracker_router.callback_query(F.data.startswith("edit_"))
 async def options_dishes_edit(call: CallbackQuery, state: FSMContext):
     await call.answer()
-    user_id = call.data.split("_")[1]
-    message_id = call.data.split("_")[2]
-    dish_name = "".join(call.data.split("_")[3:])
+    user_id = str(call.from_user.id)
+    message_id = call.data.split("_")[1]
+    dish_name = "".join(call.data.split("_")[2:])
     await state.update_data(user_id=user_id)
     await state.update_data(message_id=message_id)
     await state.update_data(dish_name=dish_name)
