@@ -209,7 +209,7 @@ async def get_chatgpt_end_day_suggestion(
     remaining_carbohydrates,
     remaining_fats,
 ):
-    dishes = ", ".join([x["dish_name"] for x in dish_history])
+    dishes = ", ".join([x["name"] for x in dish_history])
     energy = (
         f"До лимита по калориям осталось {remaining_energy}"
         if remaining_energy > 0
