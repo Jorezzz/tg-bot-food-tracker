@@ -19,7 +19,7 @@ def form_output(data):
     if len(data["dishes"]) > 0:
         output += f"✅Блюда:\n"
         for dish in data["dishes"]:
-            output += f"{dish['dish_name']}:\n\n"
+            output += f"{dish['dish_name']}:\n"
             output += f"    Вес: {dish['dish_mass_in_gramms']} г — {dish['dish_callories']} ккал\n"
             output += f"    Белки — {dish['dish_proteins']} г\n"
             output += f"    Жиры — {dish['dish_fats']} г\n"
@@ -31,7 +31,7 @@ def form_output(data):
     if len(data["drinks"]) > 0:
         output += f"✅Напитки:\n"
         for dish in data["drinks"]:
-            output += f"{dish['drink_name']}:\n\n"
+            output += f"{dish['drink_name']}:\n"
             output += f"    Обьём: {dish['drink_volume_in_milliliters']} мл — {dish['drink_callories']} ккал\n"
             output += f"    Белки — {dish['drink_proteins']} г\n"
             output += f"    Жиры — {dish['drink_fats']} г\n"
