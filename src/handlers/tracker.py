@@ -76,7 +76,8 @@ async def parse_photo(message: Message):
     is_valid_balance = await check_if_valid_balance(user, PHOTO_DESCRIPTION_PRICE)
     if not is_valid_balance:
         await message.answer(
-            "Недостаточно средств, пополните баланс", reply_markup=main_keyboard()
+            "Недостаточно средств, пополни баланс ⭐️ нажав 'Пополнить баланс'",
+            reply_markup=main_keyboard(),
         )
         return None
 
@@ -126,7 +127,7 @@ async def options_dishes(call: CallbackQuery):
     dish_id = "".join(call.data.split("_")[2:])
     dish_params = await get_dish_by_id(str(call.from_user.id), message_id, dish_id)
     await call.message.answer(
-        f"Выберите действие c {dish_params['name']}",
+        f"Выбери действие c {dish_params['name']}",
         reply_markup=remove_or_edit_keyboard(message_id, dish_id),
     )
 
@@ -150,7 +151,7 @@ async def options_dishes_edit(call: CallbackQuery, state: FSMContext):
     await state.update_data(message_id=message_id)
     await state.update_data(dish_id=dish_id)
     await state.set_state(NewDishQuantityForm.quantity)
-    await call.message.answer("Укажите новый вес блюда в граммах (миллилитрах)")
+    await call.message.answer("Укажи новый вес блюда в граммах (миллилитрах)")
 
 
 @tracker_router.message(NewDishQuantityForm.quantity)
