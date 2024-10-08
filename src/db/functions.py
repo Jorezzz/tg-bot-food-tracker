@@ -68,7 +68,6 @@ def get_pfc_limits_from_callories_limit(energy_limit):
 
 async def register_user(
     message,
-    current_energy=0,
     energy_limit=1500,
     role_id=1,
     end_hour=0,
@@ -88,10 +87,10 @@ async def register_user(
             "username": fill_null(username, ""),
             "first_name": fill_null(first_name, ""),
             "last_name": fill_null(last_name, ""),
-            "current_energy": current_energy,
-            "current_proteins": current_energy,
-            "current_carbohydrates": current_energy,
-            "current_fats": current_energy,
+            "current_energy": 0,
+            "current_proteins": 0,
+            "current_carbohydrates": 0,
+            "current_fats": 0,
             "proteins_limit": limits["proteins_limit"],
             "carbohydrates_limit": limits["carbohydrates_limit"],
             "fats_limit": limits["fats_limit"],
