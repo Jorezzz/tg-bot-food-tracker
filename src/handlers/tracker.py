@@ -47,7 +47,7 @@ async def get_daily_total(message: Message):
     try:
         user = await get_user(user_id)
         await message.answer(
-            text=f"Дневной лимит калорий {user['current_energy']} из {user['energy_limit']}\n\nБаланс: {user.get('balance', 0)} баллов"
+            text=f"Дневной лимит калорий: {user['current_energy']} из {user['energy_limit']}\n\nБаланс: {user.get('balance', 0)} баллов"
         )
         # is_valid_balance = await check_if_valid_balance(
         #     user, REMAINING_ENERGY_SUGGESTION_PRICE
@@ -65,7 +65,7 @@ async def get_daily_total(message: Message):
         # )
     except Exception as e:
         logger.error(f"{e}")
-        await message.answer(text="Some error ocured", reply_markup=main_keyboard())
+        await message.answer(text="Что-то пошло не так", reply_markup=main_keyboard())
 
 
 @tracker_router.message(F.photo)
@@ -113,6 +113,10 @@ async def parse_photo(message: Message):
         await update_user_balance(
             user_id, int(user["balance"]) - PHOTO_DESCRIPTION_PRICE
         )
+        if int(user["balance"]) - PHOTO_DESCRIPTION_PRICE < 1:
+            await message.answer(
+                text="Ой! Кажется на балансе закончились ⭐️. Чтобы пополнить нажми 'Пополнить баланс'"
+            )
 
 
 @tracker_router.callback_query(F.data.startswith("options_"))

@@ -17,25 +17,25 @@ def form_output(data):
     carbohydrates_total = 0
     fats_total = 0
     if len(data["dishes"]) > 0:
-        output += f"Блюда:\n"
+        output += f"✅Блюда:\n"
         for dish in data["dishes"]:
-            output += f"{dish['dish_name']}:\n"
-            output += f"    Вес: {dish['dish_mass_in_gramms']} грамм - {dish['dish_callories']} ккал\n"
-            output += f"    Белки {dish['dish_proteins']}\n"
-            output += f"    Углеводы {dish['dish_carbohydrates']}\n"
-            output += f"    Жиры {dish['dish_fats']}\n\n"
+            output += f"{dish['dish_name']}:\n\n"
+            output += f"    Вес: {dish['dish_mass_in_gramms']} г - {dish['dish_callories']} ккал\n"
+            output += f"    Белки — {dish['dish_proteins']} г\n"
+            output += f"    Жиры — {dish['dish_fats']} г\n"
+            output += f"    Углеводы — {dish['dish_carbohydrates']} г\n\n"
             energy_total += int(dish["dish_callories"])
             proteins_total += int(dish["dish_proteins"])
             carbohydrates_total += int(dish["dish_carbohydrates"])
             fats_total += int(dish["dish_fats"])
     if len(data["drinks"]) > 0:
-        output += f"Напитки:\n"
+        output += f"✅Напитки:\n"
         for dish in data["drinks"]:
-            output += f"{dish['drink_name']}:\n"
-            output += f"    Обьём: {dish['drink_volume_in_milliliters']} грамм - {dish['drink_callories']} ккал\n"
-            output += f"    Белки {dish['drink_proteins']}\n"
-            output += f"    Углеводы {dish['drink_carbohydrates']}\n"
-            output += f"    Жиры {dish['drink_fats']}\n\n"
+            output += f"{dish['drink_name']}:\n\n"
+            output += f"    Обьём: {dish['drink_volume_in_milliliters']} мл - {dish['drink_callories']} ккал\n"
+            output += f"    Белки — {dish['drink_proteins']} г\n"
+            output += f"    Жиры — {dish['drink_fats']} г\n"
+            output += f"    Углеводы — {dish['drink_carbohydrates']} г\n\n"
             energy_total += int(dish["drink_callories"])
             proteins_total += int(dish["drink_proteins"])
             carbohydrates_total += int(dish["drink_carbohydrates"])

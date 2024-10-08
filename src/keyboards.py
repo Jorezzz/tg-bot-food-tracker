@@ -11,7 +11,10 @@ from utils import hash
 def main_keyboard(is_persistent=True):
     kb_list = [
         [KeyboardButton(text="Статус"), KeyboardButton(text="Настройки")],
-        [KeyboardButton(text="Пополнить счёт"), KeyboardButton(text="Ввести промокод")],
+        [
+            KeyboardButton(text="Пополнить баланс"),
+            KeyboardButton(text="Ввести промокод"),
+        ],
         [KeyboardButton(text="Помощь")],
     ]
     return ReplyKeyboardMarkup(
@@ -88,6 +91,7 @@ def payment_size_keyboard():
             KeyboardButton(text="Пополнить на 100"),
             KeyboardButton(text="Пополнить на 300"),
         ],
+        [KeyboardButton(text="Назад")],
     ]
     return ReplyKeyboardMarkup(
         keyboard=kb_list,

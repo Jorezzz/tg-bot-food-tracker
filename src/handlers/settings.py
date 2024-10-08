@@ -32,7 +32,7 @@ async def close_settings_menu(message: Message):
 async def start_updating_finish_day(message: Message, state: FSMContext):
     await state.set_state(DayFinishForm.day_finish)
     await message.reply(
-        "Укажите новое время окончания дня в формате час.минута",
+        "Укажите новое время окончания дня в формате 'час.минута' (например 17.05)",
         reply_markup=main_keyboard(),
     )
 

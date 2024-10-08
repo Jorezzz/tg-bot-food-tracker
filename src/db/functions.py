@@ -183,7 +183,7 @@ async def finish_user_day(user_id, dttm):
             "dttm_started_dttm": dttm.strftime(FORMAT_STRING),
         },
     )
-    results = f'Итоги за день:\nКалории {user_data["current_energy"]}/{user_data["energy_limit"]}\nБелки {user_data["current_proteins"]}/{user_data["proteins_limit"]}\nЖиры {user_data["current_fats"]}/{user_data["fats_limit"]}\nУглеводы {user_data["current_carbohydrates"]}/{user_data["carbohydrates_limit"]}'
+    results = f'🚀Итоги за день:\n\nКалории — {user_data["current_energy"]}/{user_data["energy_limit"]} ккал\nБелки — {user_data["current_proteins"]}/{user_data["proteins_limit"]} г\nЖиры — {user_data["current_fats"]}/{user_data["fats_limit"]} г\nУглеводы — {user_data["current_carbohydrates"]}/{user_data["carbohydrates_limit"]} г'
     await bot(
         SendMessage(chat_id=int(user_id), text=results, disable_notification=True)
     )

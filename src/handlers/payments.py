@@ -58,7 +58,7 @@ async def entered_promocode(message: Message, state: FSMContext):
         await message.answer(text="Что-то пошло не так")
 
 
-@payment_router.message(F.text.contains("Пополнить счёт"))
+@payment_router.message(F.text.contains("Пополнить баланс"))
 async def send_payment_sizes(message: Message):
     await message.reply("Выберите размер платежа", reply_markup=payment_size_keyboard())
 
@@ -75,8 +75,8 @@ async def send_invoice_handler(message: Message):
         LabeledPrice(label="XTR", amount=size),
     ]
     await message.answer_invoice(
-        title="Пополнить счёт",
-        description=f"Пополнить счёт на {size} ⭐️",
+        title="Пополнить баланс",
+        description=f"Пополнить баланс на {size} ⭐️",
         prices=prices,
         provider_token="",
         payload=f"pay_{size}",
@@ -100,6 +100,6 @@ async def on_successful_payment(message: Message):
     await update_user_balance(user_id, int(user.get("balance", 0)) + size)
     await message.answer(
         text="Оплата прошла успешно, средства зачислены на ваш аккаунт",
-        message_effect_id="5104841245755180586",
+        # message_effect_id="5104841245755180586",
         reply_markup=main_keyboard(),
     )
