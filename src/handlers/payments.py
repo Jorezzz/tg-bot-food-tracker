@@ -97,7 +97,7 @@ async def on_successful_payment(message: Message):
     user_id = message.from_user.id
     size = int(message.successful_payment.invoice_payload.split("_")[-1])
     user = await get_user(user_id)
-    await update_user_balance(user_id, int(user.get("balance")) + size)
+    await update_user_balance(user_id, int(user.get("balance", 0)) + size)
     await message.answer(
         text="Оплата прошла успешно, средства зачислены на ваш аккаунт",
         message_effect_id="5104841245755180586",
