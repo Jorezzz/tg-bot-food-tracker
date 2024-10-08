@@ -10,12 +10,10 @@ from utils import hash
 
 def main_keyboard(is_persistent=True):
     kb_list = [
-        [KeyboardButton(text="Статус за день"), KeyboardButton(text="Настройки")],
+        [KeyboardButton(text="Статус"), KeyboardButton(text="Настройки")],
+        [KeyboardButton(text="Пополнить счёт"), KeyboardButton(text="Ввести промокод")],
         [KeyboardButton(text="Помощь")],
     ]
-    # is_allowed = await permission_allowed(user_id, 1)
-    # if not is_allowed:
-    #     kb_list = [[KeyboardButton(text="Регистрация")]] + kb_list
     return ReplyKeyboardMarkup(
         is_persistent=is_persistent,
         keyboard=kb_list,
@@ -77,4 +75,41 @@ def remove_or_edit_keyboard(message_id, dish_id):
                 ),
             ]
         ]
+    )
+
+
+def payment_size_keyboard():
+    kb_list = [
+        [
+            KeyboardButton(text="Пополнить на 20"),
+            KeyboardButton(text="Пополнить на 50"),
+        ],
+        [
+            KeyboardButton(text="Пополнить на 100"),
+            KeyboardButton(text="Пополнить на 300"),
+        ],
+    ]
+    return ReplyKeyboardMarkup(
+        keyboard=kb_list,
+        resize_keyboard=True,
+        one_time_keyboard=True,
+        input_field_placeholder="Выберите размер пополнения",
+    )
+
+
+def payment_keyboard(size):
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text=f"Оплатить {size} ⭐️",
+                    pay=True,
+                )
+            ],
+            [
+                InlineKeyboardButton(
+                    text=f"Отменить оплату", callback_data="cancel_payment"
+                )
+            ],
+        ],
     )

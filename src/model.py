@@ -162,7 +162,7 @@ async def get_chatgpt_photo_description(b64_photo, optional_text=None):
     return response["choices"][0]["message"]
 
 
-@alru_cache(maxsize=150)
+@alru_cache(maxsize=1000)
 async def get_chatgpt_remaining_energy_suggestion(remaining_energy):
     headers = {
         "Content-Type": "application/json",

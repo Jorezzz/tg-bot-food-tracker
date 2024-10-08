@@ -1,10 +1,12 @@
-from db.functions import get_user
-from config import logger, ROLE_ID
-
-
-async def permission_allowed(user_id, minimum_role_id):
-    user = await get_user(user_id)
+async def permission_allowed(user, minimum_role_id):
     if int(user.get("role_id", 0)) >= minimum_role_id:
         return True
-    logger.info(f"Faild permission check {user_id=}")
+    return False
+
+
+async def check_if_valid_balance(user, required_balance):
+    if int(user.get("role_id", 0)) >= 3:
+        return True
+    if int(user.get("balance", 0)) >= int(required_balance):
+        return True
     return False

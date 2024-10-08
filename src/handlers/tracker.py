@@ -3,8 +3,12 @@ from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from create_bot import bot
-from config import logger
-from auth.utils import permission_allowed
+from config import (
+    logger,
+    PHOTO_DESCRIPTION_PRICE,
+    REMAINING_ENERGY_SUGGESTION_PRICE,
+)
+from auth.utils import permission_allowed, check_if_valid_balance
 import io
 from utils import encode_image, hash
 from model import (
@@ -20,9 +24,10 @@ from db.functions import (
     remove_dish_from_user_day,
     update_dish_quantity,
     get_dish_by_id,
+    update_user_balance,
 )
 from aiogram.utils.chat_action import ChatActionSender
-from keyboard import main_keyboard, dishes_keyboard, remove_or_edit_keyboard
+from keyboards import main_keyboard, dishes_keyboard, remove_or_edit_keyboard
 
 
 class NewDishQuantityForm(StatesGroup):
@@ -35,20 +40,29 @@ class NewDishQuantityForm(StatesGroup):
 tracker_router = Router()
 
 
-@tracker_router.message(F.text.contains("Статус за день"))
+@tracker_router.message(F.text.contains("Статус"))
 @tracker_router.message(F.text == "/daily_total")
 async def get_daily_total(message: Message):
+    user_id = message.from_user.id
     try:
-        user_data = await get_user(message.from_user.id)
+        user = await get_user(user_id)
         await message.answer(
-            text=f"Дневной лимит калорий {user_data['current_energy']} из {user_data['energy_limit']}"
+            text=f"Дневной лимит калорий {user['current_energy']} из {user['energy_limit']}\n\nБаланс: {user.get('balance', 0)} баллов"
         )
+        # is_valid_balance = await check_if_valid_balance(
+        #     user, REMAINING_ENERGY_SUGGESTION_PRICE
+        # )
+        # if is_valid_balance:
         suggestion = await get_chatgpt_remaining_energy_suggestion(
             round(
-                int(user_data["energy_limit"]) - int(user_data["current_energy"]), -1
+                int(user["energy_limit"]) - int(user["current_energy"]),
+                -1,
             ),
         )
         await message.answer(text=suggestion, reply_markup=main_keyboard())
+        # await update_user_balance(
+        #     user_id, int(user["balance"]) - REMAINING_ENERGY_SUGGESTION_PRICE
+        # )
     except Exception as e:
         logger.error(f"{e}")
         await message.answer(text="Some error ocured", reply_markup=main_keyboard())
@@ -57,9 +71,13 @@ async def get_daily_total(message: Message):
 @tracker_router.message(F.photo)
 async def parse_photo(message: Message):
     user_id = message.from_user.id
-    is_allowed = await permission_allowed(user_id, 1)
-    if not is_allowed:
-        await message.answer("Недостаточно прав", reply_markup=main_keyboard())
+    user = await get_user(user_id)
+
+    is_valid_balance = await check_if_valid_balance(user, PHOTO_DESCRIPTION_PRICE)
+    if not is_valid_balance:
+        await message.answer(
+            "Недостаточно средств, пополните баланс", reply_markup=main_keyboard()
+        )
         return None
 
     async with ChatActionSender.typing(bot=bot, chat_id=user_id):
@@ -91,6 +109,9 @@ async def parse_photo(message: Message):
                 message.message_id,
                 model_output["dishes"] + model_output["drinks"],
             ),
+        )
+        await update_user_balance(
+            user_id, int(user["balance"]) - PHOTO_DESCRIPTION_PRICE
         )
 
 

@@ -1,6 +1,6 @@
 from create_bot import client, client_times, dp, bot
 from aiogram.methods.send_message import SendMessage
-from config import logger
+from config import END_DAY_SUGGESTION_PRICE
 from utils import convert_dict_from_bytes, convert_list_from_bytes, fill_null, hash
 from model import get_chatgpt_end_day_suggestion
 import pytz
@@ -67,9 +67,14 @@ def get_pfc_limits_from_callories_limit(energy_limit):
 
 
 async def register_user(
-    message, current_energy=0, energy_limit=1500, role_id=1, end_hour=0, end_minute=0
+    message,
+    current_energy=0,
+    energy_limit=1500,
+    role_id=1,
+    end_hour=0,
+    end_minute=0,
+    balance=0,
 ):
-    # logger.info(f"{message.__dict__}")
     user_id = message.from_user.id
     username = message.from_user.username
     first_name = message.from_user.first_name
@@ -95,6 +100,7 @@ async def register_user(
             "dttm_started_dttm": now,
             "end_hour": end_hour,
             "end_minute": end_minute,
+            "balance": balance,
         },
     )
     await client_times.sadd("0.0", str(user_id))
@@ -178,25 +184,22 @@ async def finish_user_day(user_id, dttm):
             "dttm_started_dttm": dttm.strftime(FORMAT_STRING),
         },
     )
-    # if int(user_data["current_energy"]) > int(user_data["energy_limit"]):
-    #     text = f'Сегодня вы превысили лимит каллорий на {int(user_data["current_energy"]) - int(user_data["energy_limit"])}, но не стоит расстраиваться. Похудение это сложный процесс, уверен завтра у вас всё получится!'
-    # elif int(user_data["current_energy"]) == int(user_data["energy_limit"]):
-    #     text = f"Сегодня вы ровно уложились в днейвной лимит каллорий. Так держать!"
-    # else:
-    #     text = f'Сегодня вы уложились в днейвной лимит каллорий, и даже остался запас в {int(user_data["energy_limit"]) - int(user_data["current_energy"])}. Так держать!'
-    dish_history = await pg_client.select_dish_history(started_dttm)
-    text = await get_chatgpt_end_day_suggestion(
-        dish_history,
-        int(user_data["energy_limit"]) - int(user_data["current_energy"]),
-        int(user_data["proteins_limit"]) - int(user_data["current_proteins"]),
-        int(user_data["carbohydrates_limit"]) - int(user_data["current_carbohydrates"]),
-        int(user_data["fats_limit"]) - int(user_data["current_fats"]),
-    )
     results = f'Итоги за день:\nКалории {user_data["current_energy"]}/{user_data["energy_limit"]}\nБелки {user_data["current_proteins"]}/{user_data["proteins_limit"]}\nЖиры {user_data["current_fats"]}/{user_data["fats_limit"]}\nУглеводы {user_data["current_carbohydrates"]}/{user_data["carbohydrates_limit"]}'
     await bot(
         SendMessage(chat_id=int(user_id), text=results, disable_notification=True)
     )
-    await bot(SendMessage(chat_id=int(user_id), text=text, disable_notification=True))
+    # dish_history = await pg_client.select_dish_history(started_dttm)
+    # text = await get_chatgpt_end_day_suggestion(
+    #     dish_history,
+    #     int(user_data["energy_limit"]) - int(user_data["current_energy"]),
+    #     int(user_data["proteins_limit"]) - int(user_data["current_proteins"]),
+    #     int(user_data["carbohydrates_limit"])
+    #     - int(user_data["current_carbohydrates"]),
+    #     int(user_data["fats_limit"]) - int(user_data["current_fats"]),
+    # )
+    # await bot(
+    #     SendMessage(chat_id=int(user_id), text=text, disable_notification=True)
+    # )
 
 
 async def get_dish_by_id(user_id, message_id, dish_id):
@@ -274,3 +277,20 @@ async def update_dish_quantity(user_id, message_id, dish_id, new_quantity):
             "fats": dish_new_fats,
         },
     )
+
+
+async def get_promocode(password):
+    pg_client = dp["pg_client"]
+    result = await pg_client.select_promocode(password)
+    return result
+
+
+async def update_promocode_quantity(password, new_amount):
+    pg_client = dp["pg_client"]
+    pg_client.update(
+        "promocodes", {"password": str(password)}, {"remaining_quantity": new_amount}
+    )
+
+
+async def update_user_balance(user_id, new_balance):
+    await update_user(user_id, {"balance": new_balance})

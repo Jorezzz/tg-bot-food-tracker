@@ -38,3 +38,15 @@ CREATE TABLE IF NOT EXISTS daily_energy
     fats_limit INTEGER DEFAULT 0,
     PRIMARY KEY(dttm_started_dttm, user_id)
 );
+
+CREATE TABLE IF NOT EXISTS promocodes
+(
+    dttm_started TIMESTAMP NOT NULL DEFAULT current_timestamp,
+    name VARCHAR(255) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    quantity BIGINT NOT NULL,
+    remaining_quantity BIGINT NOT NULL,
+    balance_boost BIGINT NOT NULL,
+    aux_property VARCHAR(255),
+    PRIMARY KEY(name)
+);

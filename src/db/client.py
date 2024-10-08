@@ -30,20 +30,22 @@ class PGClient:
         async with self.pool.acquire() as con:
             await con.execute(query, *args, **kwargs)
 
-    async def insert(self, table, data: List[Dict[str, Any]] | Dict[str, Any]) -> None:
+    async def insert(
+        self, table, data: List[Dict[str, Any]] | Dict[str, Any], additional_query=""
+    ) -> None:
         if not isinstance(data, list):
             data = [data]
         columns, idxs = self._prepare_insertion(data[0])
         values = [tuple(x.values()) for x in data]
         query = f"""
-            INSERT INTO {table}({columns}) VALUES({idxs})
+            INSERT INTO {table}({columns}) VALUES({idxs}) {additional_query}
         """
         async with self.pool.acquire() as con:
             await con.executemany(query, values)
 
     async def select_dish(self, user_id, message_id, dish_id):
         async with self.pool.acquire() as con:
-            rows = await con.fetchrow(
+            row = await con.fetchrow(
                 """
                 SELECT * 
                 FROM dishes
@@ -54,7 +56,7 @@ class PGClient:
                 int(message_id),
                 int(dish_id),
             )
-            return rows
+            return row
 
     async def update(self, table_name, where_dict, update_dict):
         update_query = self._prepare_update_query(update_dict)
@@ -91,3 +93,15 @@ class PGClient:
                 dttm,
             )
             return rows
+
+    async def select_promocode(self, password):
+        async with self.pool.acquire() as con:
+            row = await con.fetchrow(
+                """
+                SELECT *
+                FROM promocodes
+                WHERE password = $1
+            """,
+                str(password),
+            )
+            return row
