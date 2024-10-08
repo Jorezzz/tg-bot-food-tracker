@@ -1,12 +1,11 @@
-from create_bot import client, client_times, dp, bot
+from create_bot import dp, bot
 from aiogram.methods.send_message import SendMessage
 from config import END_DAY_SUGGESTION_PRICE
-from utils import convert_dict_from_bytes, convert_list_from_bytes, fill_null, hash
+from utils import hash
 from model import get_chatgpt_end_day_suggestion
 import pytz
 import datetime
 
-FORMAT_STRING = "%Y-%m-%d %H:%M:%S"
 TZ = pytz.timezone("Europe/Moscow")
 
 
@@ -74,19 +73,15 @@ async def register_user(
     end_minute=0,
     balance=0,
 ):
-    user_id = message.from_user.id
-    username = message.from_user.username
-    first_name = message.from_user.first_name
-    last_name = message.from_user.last_name
-    now = datetime.datetime.now(TZ).strftime(FORMAT_STRING)
     limits = get_pfc_limits_from_callories_limit(energy_limit)
-    await client.hset(
-        str(user_id),
-        mapping={
-            "registered_dttm": now,
-            "username": fill_null(username, ""),
-            "first_name": fill_null(first_name, ""),
-            "last_name": fill_null(last_name, ""),
+    pg_client = dp["pg_client"]
+    await pg_client.insert(
+        "users",
+        {
+            "user_id": message.from_user.id,
+            "username": message.from_user.username,
+            "first_name": message.from_user.first_name,
+            "last_name": message.from_user.last_name,
             "current_energy": 0,
             "current_proteins": 0,
             "current_carbohydrates": 0,
@@ -96,30 +91,31 @@ async def register_user(
             "fats_limit": limits["fats_limit"],
             "energy_limit": energy_limit,
             "role_id": role_id,
-            "dttm_started_dttm": now,
             "end_hour": end_hour,
             "end_minute": end_minute,
             "balance": balance,
         },
+        additional_query="ON CONFLICT (user_id) DO NOTHING",
     )
-    await client_times.sadd("0.0", str(user_id))
 
 
 async def get_user(user_id):
-    res = await client.hgetall(str(user_id))
-    return convert_dict_from_bytes(res) if res is not None else None
+    pg_client = dp["pg_client"]
+    res = await pg_client.select_one("users", {"user_id": user_id})
+    return res
 
 
 async def update_user(user_id, update_dict):
-    await client.hset(str(user_id), mapping=update_dict)
+    pg_client = dp["pg_client"]
+    await pg_client.update("users", {"user_id": user_id}, update_dict)
 
 
 async def add_meal_energy(user_id, energy, proteins, carbohydrates, fats):
     user_data = await get_user(user_id)
-    current_energy = int(user_data["current_energy"]) + energy
-    current_proteins = int(user_data["current_proteins"]) + proteins
-    current_carbohydrates = int(user_data["current_carbohydrates"]) + carbohydrates
-    current_fats = int(user_data["current_fats"]) + fats
+    current_energy = user_data["current_energy"] + energy
+    current_proteins = user_data["current_proteins"] + proteins
+    current_carbohydrates = user_data["current_carbohydrates"] + carbohydrates
+    current_fats = user_data["current_fats"] + fats
     await update_user(
         user_id,
         update_dict={
@@ -132,45 +128,37 @@ async def add_meal_energy(user_id, energy, proteins, carbohydrates, fats):
 
 
 async def swap_time(user_id, hour, minute):
-    user_data = await get_user(user_id)
-    new_string = hour + "." + minute
-    old_string = str(user_data["end_hour"]) + "." + str(user_data["end_minute"])
-    # logger.info(f"{old_string=} {new_string=}")
     await update_user(user_id, {"end_hour": hour, "end_minute": minute})
-    await client_times.sadd(new_string, str(user_id))
-    await client_times.srem(old_string, str(user_id))
 
 
 async def finish_day_check_all_users():
     dttm = datetime.datetime.now(pytz.timezone("Europe/Moscow")).replace(tzinfo=None)
-    # logger.info(f"{dttm=}")
-    res = await client_times.smembers(str(dttm.hour) + "." + str(dttm.minute))
-    res = convert_list_from_bytes(res)
-    # logger.info(f"{res=}")
-    for user in res:
-        await finish_user_day(user, dttm)
+    pg_client = dp["pg_client"]
+    hour = dttm.hour
+    minute = dttm.minute
+    res = await pg_client.select_many("users", {"end_hour": hour, "end_minute": minute})
+    for row in res:
+        await finish_user_day(row["user_id"], dttm)
 
 
 async def finish_user_day(user_id, dttm):
     user_data = await get_user(user_id)
-    started_dttm = datetime.datetime.strptime(
-        user_data["dttm_started_dttm"], FORMAT_STRING
-    ).replace(tzinfo=None)
+    started_dttm = user_data["dttm_started_dttm"]
     pg_client = dp["pg_client"]
     await pg_client.insert(
         "daily_energy",
         {
-            "user_id": int(user_id),
+            "user_id": user_id,
             "dttm_started_dttm": started_dttm,
             "dttm_finished_dttm": dttm,
-            "current_energy": int(user_data["current_energy"]),
-            "energy_limit": int(user_data["energy_limit"]),
-            "current_proteins": int(user_data["current_proteins"]),
-            "proteins_limit": int(user_data["proteins_limit"]),
-            "current_carbohydrates": int(user_data["current_carbohydrates"]),
-            "carbohydrates_limit": int(user_data["carbohydrates_limit"]),
-            "current_fats": int(user_data["current_fats"]),
-            "fats_limit": int(user_data["fats_limit"]),
+            "current_energy": user_data["current_energy"],
+            "energy_limit": user_data["energy_limit"],
+            "current_proteins": user_data["current_proteins"],
+            "proteins_limit": user_data["proteins_limit"],
+            "current_carbohydrates": user_data["current_carbohydrates"],
+            "carbohydrates_limit": user_data["carbohydrates_limit"],
+            "current_fats": user_data["current_fats"],
+            "fats_limit": user_data["fats_limit"],
         },
     )
     await update_user(
@@ -180,7 +168,7 @@ async def finish_user_day(user_id, dttm):
             "current_proteins": 0,
             "current_carbohydrates": 0,
             "current_fats": 0,
-            "dttm_started_dttm": dttm.strftime(FORMAT_STRING),
+            "dttm_started_dttm": dttm,
         },
     )
     results = f'🚀Итоги за день:\n\nКалории — {user_data["current_energy"]}/{user_data["energy_limit"]} ккал\nБелки — {user_data["current_proteins"]}/{user_data["proteins_limit"]} г\nЖиры — {user_data["current_fats"]}/{user_data["fats_limit"]} г\nУглеводы — {user_data["current_carbohydrates"]}/{user_data["carbohydrates_limit"]} г'
@@ -202,7 +190,6 @@ async def finish_user_day(user_id, dttm):
 
 
 async def get_dish_by_id(user_id, message_id, dish_id):
-    user_data = await get_user(user_id)
     pg_client = dp["pg_client"]
     dish_params = await pg_client.select_dish(user_id, message_id, dish_id)
     return dish_params

@@ -46,12 +46,12 @@ async def entered_promocode(message: Message, state: FSMContext):
         user = await get_user(user_id)
         await update_user(
             user_id,
-            {"balance": int(user.get("balance", 0)) + int(promocode["balance_boost"])},
+            {"balance": user["balance"] + promocode["balance_boost"]},
         )
         await message.answer(text="Баланс успешно пополнен")
         if promocode["aux_property"] != "unlimited":
             await update_promocode_quantity(
-                password, int(promocode["remaining_quantity"]) - 1
+                password, promocode["remaining_quantity"] - 1
             )
     except Exception as e:
         logger.error(f"{e}")
@@ -97,7 +97,7 @@ async def on_successful_payment(message: Message):
     user_id = message.from_user.id
     size = int(message.successful_payment.invoice_payload.split("_")[-1])
     user = await get_user(user_id)
-    await update_user_balance(user_id, int(user.get("balance", 0)) + size)
+    await update_user_balance(user_id, user["balance"] + size)
     await message.answer(
         text="Оплата прошла успешно, средства зачислены на ваш аккаунт",
         # message_effect_id="5104841245755180586",

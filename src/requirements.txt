@@ -2,7 +2,6 @@ aiogram
 aiohttp
 python-dotenv
 apscheduler
-redis
 asyncpg
 async-lru
 cityhash

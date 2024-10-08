@@ -43,20 +43,39 @@ class PGClient:
         async with self.pool.acquire() as con:
             await con.executemany(query, values)
 
-    async def select_dish(self, user_id, message_id, dish_id):
+    async def select_one(self, table_name, where_dict):
+        where_query = self._prepare_where_query(where_dict)
+        values = list(where_dict.values())
         async with self.pool.acquire() as con:
             row = await con.fetchrow(
-                """
-                SELECT * 
-                FROM dishes
-                WHERE 
-                    user_id = $1 AND message_id = $2 AND dish_id = $3
-            """,
-                int(user_id),
-                int(message_id),
-                int(dish_id),
+                f"""
+                    SELECT *
+                    FROM {table_name}
+                    {where_query}
+                """,
+                *values,
             )
             return row
+
+    async def select_many(self, table_name, where_dict):
+        where_query = self._prepare_where_query(where_dict)
+        values = list(where_dict.values())
+        async with self.pool.acquire() as con:
+            rows = await con.fetch(
+                f"""
+                    SELECT *
+                    FROM {table_name}
+                    {where_query}
+                """,
+                *values,
+            )
+            return rows
+
+    async def select_dish(self, user_id, message_id, dish_id):
+        res = await self.select_one(
+            "dishes", {"user_id": user_id, "message_id": message_id, "dish_id": dish_id}
+        )
+        return res
 
     async def update(self, table_name, where_dict, update_dict):
         update_query = self._prepare_update_query(update_dict)
@@ -102,6 +121,6 @@ class PGClient:
                 FROM promocodes
                 WHERE password = $1
             """,
-                str(password),
+                password,
             )
             return row

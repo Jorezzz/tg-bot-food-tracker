@@ -14,7 +14,6 @@ TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 PG_USER = os.environ["PG_USER"]
 PG_DB = os.environ["PG_DB"]
 PG_PWD = os.environ["PG_PWD"]
-REDIS_PWD = os.environ["REDIS_PWD"]
 ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
 
 MODEL = "gpt-4o-2024-08-06"
@@ -25,5 +24,3 @@ OPENAI_SYSTEM_END_DAY_SUGGEST_PROMPT = "Ты умный подсчитывате
 PHOTO_DESCRIPTION_PRICE = 2
 REMAINING_ENERGY_SUGGESTION_PRICE = 1
 END_DAY_SUGGESTION_PRICE = 1
-
-ROLE_ID = {"unregistered": 0, "user": 1, "premium_user": 2, "admin": 3}

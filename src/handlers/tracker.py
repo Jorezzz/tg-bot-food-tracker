@@ -8,9 +8,9 @@ from config import (
     PHOTO_DESCRIPTION_PRICE,
     REMAINING_ENERGY_SUGGESTION_PRICE,
 )
-from auth.utils import permission_allowed, check_if_valid_balance
+from auth.utils import check_if_valid_balance
 import io
-from utils import encode_image, hash
+from utils import encode_image
 from model import (
     get_chatgpt_photo_description,
     get_chatgpt_remaining_energy_suggestion,
@@ -19,7 +19,6 @@ from model import (
 from db.functions import (
     add_meal_energy,
     get_user,
-    update_user,
     pg_log_message,
     remove_dish_from_user_day,
     update_dish_quantity,
@@ -55,7 +54,7 @@ async def get_daily_total(message: Message):
         # if is_valid_balance:
         suggestion = await get_chatgpt_remaining_energy_suggestion(
             round(
-                int(user["energy_limit"]) - int(user["current_energy"]),
+                user["energy_limit"] - user["current_energy"],
                 -1,
             ),
         )
@@ -95,7 +94,6 @@ async def parse_photo(message: Message):
         model_output = eval(response["content"])
         output = form_output(model_output)
         await pg_log_message(message, model_output, b64_photo)
-        await update_user(user_id, {"last_image_message_id": message.message_id})
 
         await add_meal_energy(
             user_id,
@@ -111,10 +109,8 @@ async def parse_photo(message: Message):
                 model_output["dishes"] + model_output["drinks"],
             ),
         )
-        await update_user_balance(
-            user_id, int(user["balance"]) - PHOTO_DESCRIPTION_PRICE
-        )
-        if int(user["balance"]) - PHOTO_DESCRIPTION_PRICE < 1:
+        await update_user_balance(user_id, user["balance"] - PHOTO_DESCRIPTION_PRICE)
+        if user["balance"] - PHOTO_DESCRIPTION_PRICE < 1:
             await message.answer(
                 text="Ой! Кажется на балансе закончились ⭐️. Чтобы пополнить нажми 'Пополнить баланс'"
             )
@@ -125,7 +121,7 @@ async def options_dishes(call: CallbackQuery):
     await call.answer()
     message_id = call.data.split("_")[1]
     dish_id = "".join(call.data.split("_")[2:])
-    dish_params = await get_dish_by_id(str(call.from_user.id), message_id, dish_id)
+    dish_params = await get_dish_by_id(call.from_user.id, int(message_id), int(dish_id))
     await call.message.answer(
         f"Выбери действие c {dish_params['name']}",
         reply_markup=remove_or_edit_keyboard(message_id, dish_id),
@@ -135,16 +131,16 @@ async def options_dishes(call: CallbackQuery):
 @tracker_router.callback_query(F.data.startswith("delete_"))
 async def options_dishes_delete(call: CallbackQuery):
     await call.answer()
-    message_id = call.data.split("_")[1]
+    message_id = int(call.data.split("_")[1])
     dish_id = "".join(call.data.split("_")[2:])
-    await remove_dish_from_user_day(str(call.from_user.id), message_id, dish_id)
+    await remove_dish_from_user_day(call.from_user.id, int(message_id), int(dish_id))
     await call.message.answer(f"Блюдо успешно удалено")
 
 
 @tracker_router.callback_query(F.data.startswith("edit_"))
 async def options_dishes_edit(call: CallbackQuery, state: FSMContext):
     await call.answer()
-    user_id = str(call.from_user.id)
+    user_id = call.from_user.id
     message_id = call.data.split("_")[1]
     dish_id = "".join(call.data.split("_")[2:])
     await state.update_data(user_id=user_id)
@@ -160,9 +156,9 @@ async def edit_dish(message: Message, state: FSMContext):
     await state.clear()
     try:
         await update_dish_quantity(
-            data.get("user_id"),
-            data.get("message_id"),
-            data.get("dish_id"),
+            int(data.get("user_id")),
+            int(data.get("message_id")),
+            int(data.get("dish_id")),
             int(message.text),
         )
         await message.answer(text="Вес изменён")

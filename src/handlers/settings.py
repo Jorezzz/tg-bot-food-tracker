@@ -43,8 +43,8 @@ async def process_finish_day(message: Message, state: FSMContext):
     try:
         await swap_time(
             message.from_user.id,
-            str(int(message.text.split(".")[0])),
-            str(int(message.text.split(".")[1])),
+            int(message.text.split(".")[0]),
+            int(message.text.split(".")[1]),
         )
         await message.answer(text="Время окончания дня измененно")
     except ValueError:
