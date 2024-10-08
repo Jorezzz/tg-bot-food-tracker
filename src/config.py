@@ -14,6 +14,7 @@ TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
 PG_USER = os.environ["PG_USER"]
 PG_DB = os.environ["PG_DB"]
 PG_PWD = os.environ["PG_PWD"]
+REDIS_PWD = os.environ["REDIS_PWD"]
 ADMIN_PASSWORD = os.environ["ADMIN_PASSWORD"]
 
 MODEL = "gpt-4o-2024-08-06"

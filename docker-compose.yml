@@ -26,6 +26,9 @@ services:
 
   redis:
     image: redis:latest
+    command: /bin/sh -c "redis-server --requirepass $$REDIS_HOST_PASSWORD"
+    environment:
+      - REDIS_HOST_PASSWORD=ZdFAZ1fi1Fv64ESl1jQYSjFp9skrZ4PV
     ports:
       - 6379:6379
 

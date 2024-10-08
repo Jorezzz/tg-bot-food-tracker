@@ -6,7 +6,7 @@ from aiogram.enums import ParseMode
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 import redis.asyncio as redis
 from asyncpg import create_pool
-from config import PG_DB, PG_PWD, PG_USER, TELEGRAM_TOKEN
+from config import PG_DB, PG_PWD, PG_USER, TELEGRAM_TOKEN, REDIS_PWD
 
 # from db.client import PGClient
 
@@ -18,7 +18,9 @@ async def init_db_postgres():
     return pool
 
 
-client = redis.Redis.from_pool(redis.ConnectionPool.from_url("redis://redis:6379/0"))
+client = redis.Redis.from_pool(
+    redis.ConnectionPool.from_url(f"redis://{REDIS_PWD}@redis:6379/0")
+)
 client_times = redis.Redis.from_pool(
     redis.ConnectionPool.from_url("redis://redis_timers:6379/0")
 )
