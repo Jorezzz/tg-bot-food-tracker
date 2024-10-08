@@ -19,7 +19,7 @@ settings_router = Router()
 
 @settings_router.message(F.text.contains("Настройки"))
 async def open_settings_menu(message: Message):
-    await message.reply("Выберите настройку", reply_markup=settings_keyboard())
+    await message.reply("Выбери настройку", reply_markup=settings_keyboard())
 
 
 @settings_router.message(F.text.contains("Назад"))
@@ -32,7 +32,7 @@ async def close_settings_menu(message: Message):
 async def start_updating_finish_day(message: Message, state: FSMContext):
     await state.set_state(DayFinishForm.day_finish)
     await message.reply(
-        "Укажите новое время окончания дня в формате 'час.минута' (например 17.05)",
+        "Укажи новое время окончания дня в формате 'час.минута' (например 17.05)",
         reply_markup=main_keyboard(),
     )
 
@@ -55,7 +55,7 @@ async def process_finish_day(message: Message, state: FSMContext):
 @settings_router.message(F.text == "/update_daily_limit")
 async def start_updating_daily_limit(message: Message, state: FSMContext):
     await state.set_state(EnergyLimitForm.energy_limit)
-    await message.reply("Укажите новый лимит калорий", reply_markup=main_keyboard())
+    await message.reply("Укажи новый лимит калорий", reply_markup=main_keyboard())
 
 
 @settings_router.message(EnergyLimitForm.energy_limit)
