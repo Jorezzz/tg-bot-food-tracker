@@ -26,11 +26,11 @@ services:
 
   redis:
     image: redis:latest
+    ports:
+      - 6379:6379
 
   redis_timers:
     image: redis:latest
-    # ports:
-    #   - 6379:6379
 
   # mongodb:
   #   image: mongodb/mongodb-community-server:6.0-ubi8
