@@ -37,7 +37,7 @@ class NewDishQuantityForm(StatesGroup):
 
 
 tracker_router = Router()
-
+tracker_router.message.middleware(AlbumMiddleware())
 
 @tracker_router.message(F.text.contains("Статус"))
 @tracker_router.message(F.text == "/daily_total")
