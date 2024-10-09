@@ -31,37 +31,31 @@ import asyncio
 from typing import List, Union
 from aiogram.dispatcher.middlewares.base import BaseMiddleware
 
-class AlbumMiddleware(BaseMiddleware):
-    album_data: dict = {}
+class MediaMiddleware(BaseMiddleware):
     def __init__(self, latency: Union[int, float] = 0.01):
+        self.medias = {}
         self.latency = latency
-        super().__init__()
+        super(MediaMiddleware, self).__init__()
 
-    async def on_process_message(self, message, data: dict):
-        if not message.media_group_id:
-            self.album_data[message.from_user.id] = [message]
 
-            message.conf["is_last"] = True
-            data["album"] = self.album_data[message.from_user.id]
-            await asyncio.sleep(self.latency)
-        else:
+    async def __call__(
+        self,
+        handler,
+        event,
+        data
+    ):
+
+        if isinstance(event, Message) and event.media_group_id:
             try:
-                self.album_data[message.media_group_id].append(message)
-                return None
+                self.medias[event.media_group_id].append(event)
+                return
             except KeyError:
-                self.album_data[message.media_group_id] = [message]
+                self.medias[event.media_group_id] = [event]
                 await asyncio.sleep(self.latency)
 
-                message.conf["is_last"] = True
-                data["album"] = self.album_data[message.media_group_id]
+                data["media_events"] = self.medias.pop(event.media_group_id)
 
-    async def on_post_process_message(self, message):
-        if not message.media_group_id:
-            if message.from_user.id and message.conf.get("is_last"):
-                del self.album_data[message.from_user.id]
-        else:
-            if message.media_group_id and message.conf.get("is_last"):
-                del self.album_data[message.media_group_id]
+        return await handler(event, data) 
 
 class NewDishQuantityForm(StatesGroup):
     quantity = State()
@@ -71,7 +65,7 @@ class NewDishQuantityForm(StatesGroup):
 
 
 tracker_router = Router()
-tracker_router.message.middleware(AlbumMiddleware())
+tracker_router.message.middleware(MediaMiddleware())
 
 @tracker_router.message(F.text.contains("Статус"))
 @tracker_router.message(F.text == "/daily_total")
@@ -146,15 +140,16 @@ async def apply_ml_photo_message(message):
             await message.answer(
                 text="Ой! Кажется на балансе закончились ⭐️. Чтобы пополнить нажми 'Пополнить баланс'"
             )
-        
+
+@tracker_router.message(F.media_group_id != None)
+async def parse_photo(message: Message, media_events):
+    for mess in media_events:
+        await apply_ml_photo_message(mess)
+
+
 @tracker_router.message(F.photo)
-async def parse_photo(message: Message, album):
-    if not message.media_group_id:
-        if message.photo:
-            await apply_ml_photo_message(message)
-    else:
-        for obj in album:
-            await apply_ml_photo_message(obj)
+async def parse_photo(message: Message):
+    await apply_ml_photo_message(message)
 
 
 @tracker_router.callback_query(F.data.startswith("options_"))
