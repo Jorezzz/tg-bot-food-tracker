@@ -1,5 +1,5 @@
 import asyncio
-from create_bot import bot, dp, scheduler, init_db_postgres, AlbumMiddleware
+from create_bot import bot, dp, scheduler, init_db_postgres
 from handlers import start_router, settings_router, tracker_router, payment_router
 from db.functions import finish_day_check_all_users
 from db.client import PGClient
@@ -14,8 +14,6 @@ async def main():
 
     pool = await init_db_postgres()
     dp["pg_client"] = PGClient(pool)
-
-    dp.middleware.setup(AlbumMiddleware())
     
     await init_all_db_values()
     # запуск бота в режиме long polling при запуске бот очищает все обновления, которые были за его моменты бездействия
