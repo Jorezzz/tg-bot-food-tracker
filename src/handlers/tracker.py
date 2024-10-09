@@ -27,7 +27,35 @@ from db.functions import (
 )
 from aiogram.utils.chat_action import ChatActionSender
 from keyboards import main_keyboard, dishes_keyboard, remove_or_edit_keyboard
+import asyncio
+from typing import List, Union
+from aiogram.dispatcher.middlewares.base import BaseMiddleware
 
+class MediaMiddleware(BaseMiddleware):
+    def __init__(self, latency: Union[int, float] = 0.01):
+        self.medias = {}
+        self.latency = latency
+        super(MediaMiddleware, self).__init__()
+
+
+    async def __call__(
+        self,
+        handler,
+        event,
+        data
+    ):
+
+        if isinstance(event, Message) and event.media_group_id:
+            try:
+                self.medias[event.media_group_id].append(event)
+                return
+            except KeyError:
+                self.medias[event.media_group_id] = [event]
+                await asyncio.sleep(self.latency)
+
+                data["media_events"] = self.medias.pop(event.media_group_id)
+
+        return await handler(event, data) 
 
 class NewDishQuantityForm(StatesGroup):
     quantity = State()
@@ -37,7 +65,7 @@ class NewDishQuantityForm(StatesGroup):
 
 
 tracker_router = Router()
-
+tracker_router.message.middleware(MediaMiddleware())
 
 @tracker_router.message(F.text.contains("Статус"))
 @tracker_router.message(F.text == "/daily_total")
@@ -66,9 +94,7 @@ async def get_daily_total(message: Message):
         logger.error(f"{e}")
         await message.answer(text="Что-то пошло не так", reply_markup=main_keyboard())
 
-
-@tracker_router.message(F.photo)
-async def parse_photo(message: Message):
+async def apply_ml_photo_message(message):
     user_id = message.from_user.id
     user = await get_user(user_id)
 
@@ -114,6 +140,16 @@ async def parse_photo(message: Message):
             await message.answer(
                 text="Ой! Кажется на балансе закончились ⭐️. Чтобы пополнить нажми 'Пополнить баланс'"
             )
+
+@tracker_router.message(F.media_group_id != None)
+async def parse_photo(message: Message, media_events):
+    for mess in media_events:
+        await apply_ml_photo_message(mess)
+
+
+@tracker_router.message(F.photo)
+async def parse_photo(message: Message):
+    await apply_ml_photo_message(message)
 
 
 @tracker_router.callback_query(F.data.startswith("options_"))

@@ -14,7 +14,7 @@ async def main():
 
     pool = await init_db_postgres()
     dp["pg_client"] = PGClient(pool)
-
+    
     await init_all_db_values()
     # запуск бота в режиме long polling при запуске бот очищает все обновления, которые были за его моменты бездействия
     try:
