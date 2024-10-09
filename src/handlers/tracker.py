@@ -27,7 +27,41 @@ from db.functions import (
 )
 from aiogram.utils.chat_action import ChatActionSender
 from keyboards import main_keyboard, dishes_keyboard, remove_or_edit_keyboard
+import asyncio
+from typing import List, Union
+from aiogram.dispatcher.middlewares.base import BaseMiddleware
 
+class AlbumMiddleware(BaseMiddleware):
+    album_data: dict = {}
+    def __init__(self, latency: Union[int, float] = 0.01):
+        self.latency = latency
+        super().__init__()
+
+    async def on_process_message(self, message, data: dict):
+        if not message.media_group_id:
+            self.album_data[message.from_user.id] = [message]
+
+            message.conf["is_last"] = True
+            data["album"] = self.album_data[message.from_user.id]
+            await asyncio.sleep(self.latency)
+        else:
+            try:
+                self.album_data[message.media_group_id].append(message)
+                return None
+            except KeyError:
+                self.album_data[message.media_group_id] = [message]
+                await asyncio.sleep(self.latency)
+
+                message.conf["is_last"] = True
+                data["album"] = self.album_data[message.media_group_id]
+
+    async def on_post_process_message(self, message):
+        if not message.media_group_id:
+            if message.from_user.id and message.conf.get("is_last"):
+                del self.album_data[message.from_user.id]
+        else:
+            if message.media_group_id and message.conf.get("is_last"):
+                del self.album_data[message.media_group_id]
 
 class NewDishQuantityForm(StatesGroup):
     quantity = State()
