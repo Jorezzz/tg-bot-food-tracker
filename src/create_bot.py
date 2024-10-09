@@ -7,7 +7,6 @@ from asyncpg import create_pool
 from config import PG_DB, PG_PWD, PG_USER, TELEGRAM_TOKEN
 import asyncio
 from typing import List, Union
-from aiogram.dispatcher.handler import CancelHandler
 from aiogram.dispatcher.middlewares import BaseMiddleware
 
 class AlbumMiddleware(BaseMiddleware):
@@ -26,7 +25,7 @@ class AlbumMiddleware(BaseMiddleware):
         else:
             try:
                 self.album_data[message.media_group_id].append(message)
-                raise CancelHandler()
+                return None
             except KeyError:
                 self.album_data[message.media_group_id] = [message]
                 await asyncio.sleep(self.latency)
