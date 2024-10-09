@@ -66,9 +66,7 @@ async def get_daily_total(message: Message):
         logger.error(f"{e}")
         await message.answer(text="Что-то пошло не так", reply_markup=main_keyboard())
 
-
-@tracker_router.message(F.photo)
-async def parse_photo(message: Message):
+async def apply_ml_photo_message(message):
     user_id = message.from_user.id
     user = await get_user(user_id)
 
@@ -114,6 +112,15 @@ async def parse_photo(message: Message):
             await message.answer(
                 text="Ой! Кажется на балансе закончились ⭐️. Чтобы пополнить нажми 'Пополнить баланс'"
             )
+        
+@tracker_router.message(F.photo)
+async def parse_photo(message: Message, album):
+    if not message.media_group_id:
+        if message.photo:
+            await apply_ml_photo_message(message)
+    else:
+        for obj in album:
+            await apply_ml_photo_message(obj)
 
 
 @tracker_router.callback_query(F.data.startswith("options_"))
