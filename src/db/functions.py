@@ -273,7 +273,7 @@ async def get_promocode(password):
 
 async def update_promocode_quantity(password, new_amount):
     pg_client = dp["pg_client"]
-    pg_client.update(
+    await pg_client.update(
         "promocodes", {"password": str(password)}, {"remaining_quantity": new_amount}
     )
 
