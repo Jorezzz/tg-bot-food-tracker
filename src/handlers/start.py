@@ -17,7 +17,6 @@ start_router = Router()
 
 @start_router.message(F.text == "/start")
 async def start(message: Message):
-    # try:
     user = await get_user(message.from_user.id)
     logger.info(f"{user}")
     if user is None:
@@ -45,12 +44,8 @@ async def start(message: Message):
 💬 Есть вопросы? Нажми "Помощь" и узнай все о @EasyCalloriesBot
         """
     await message.answer(text=text, reply_markup=main_keyboard())
-    # except Exception as e:
-    #     logger.error(f"{e}")
-    #     await message.answer(text="Что-то пошло не так")
 
 
-# @start_router.message(F.text.contains("Регистрация"))
 @start_router.message(F.text == "/register")
 async def init_user(message: Message):
     try:

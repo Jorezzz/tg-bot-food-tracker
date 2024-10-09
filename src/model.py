@@ -32,7 +32,7 @@ def form_output(data):
         output += f"✅Напитки:\n"
         for dish in data["drinks"]:
             output += f"{dish['drink_name']}:\n"
-            output += f"    Обьём: {dish['drink_volume_in_milliliters']} мл — {dish['drink_callories']} ккал\n"
+            output += f"    Объём: {dish['drink_volume_in_milliliters']} мл — {dish['drink_callories']} ккал\n"
             output += f"    Белки — {dish['drink_proteins']} г\n"
             output += f"    Жиры — {dish['drink_fats']} г\n"
             output += f"    Углеводы — {dish['drink_carbohydrates']} г\n\n"

@@ -1,14 +1,17 @@
 from aiogram import Router, F
+from aiogram.dispatcher.middlewares.base import BaseMiddleware
 from aiogram.types import Message, CallbackQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
+from aiogram.utils.chat_action import ChatActionSender
+import asyncio
+from auth.utils import check_if_valid_balance
 from create_bot import bot
 from config import (
     logger,
     PHOTO_DESCRIPTION_PRICE,
     REMAINING_ENERGY_SUGGESTION_PRICE,
 )
-from auth.utils import check_if_valid_balance
 import io
 from utils import encode_image
 from model import (
@@ -25,26 +28,16 @@ from db.functions import (
     get_dish_by_id,
     update_user_balance,
 )
-from aiogram.utils.chat_action import ChatActionSender
 from keyboards import main_keyboard, dishes_keyboard, remove_or_edit_keyboard
-import asyncio
-from typing import List, Union
-from aiogram.dispatcher.middlewares.base import BaseMiddleware
+
 
 class MediaMiddleware(BaseMiddleware):
-    def __init__(self, latency: Union[int, float] = 0.01):
+    def __init__(self, latency=0.01):
         self.medias = {}
         self.latency = latency
         super(MediaMiddleware, self).__init__()
 
-
-    async def __call__(
-        self,
-        handler,
-        event,
-        data
-    ):
-
+    async def __call__(self, handler, event, data):
         if isinstance(event, Message) and event.media_group_id:
             try:
                 self.medias[event.media_group_id].append(event)
@@ -55,7 +48,8 @@ class MediaMiddleware(BaseMiddleware):
 
                 data["media_events"] = self.medias.pop(event.media_group_id)
 
-        return await handler(event, data) 
+        return await handler(event, data)
+
 
 class NewDishQuantityForm(StatesGroup):
     quantity = State()
@@ -66,6 +60,7 @@ class NewDishQuantityForm(StatesGroup):
 
 tracker_router = Router()
 tracker_router.message.middleware(MediaMiddleware())
+
 
 @tracker_router.message(F.text.contains("Статус"))
 @tracker_router.message(F.text == "/daily_total")
@@ -94,19 +89,19 @@ async def get_daily_total(message: Message):
         logger.error(f"{e}")
         await message.answer(text="Что-то пошло не так", reply_markup=main_keyboard())
 
-async def apply_ml_photo_message(message):
+
+async def apply_ml_photo_message(message, alarm=True):
     user_id = message.from_user.id
     user = await get_user(user_id)
 
-    is_valid_balance = await check_if_valid_balance(user, PHOTO_DESCRIPTION_PRICE)
-    if not is_valid_balance:
+    if not check_if_valid_balance(user, PHOTO_DESCRIPTION_PRICE):
         await message.answer(
-            "Недостаточно средств, пополни баланс ⭐️ нажав 'Пополнить баланс'",
+            "Для дальнейшей работы недостаточно средств, пополни баланс ⭐️ нажав 'Пополнить баланс'",
             reply_markup=main_keyboard(),
         )
-        return None
+        return "Failed"
     await update_user_balance(user_id, user["balance"] - PHOTO_DESCRIPTION_PRICE)
-    
+
     async with ChatActionSender.typing(bot=bot, chat_id=user_id):
         file_in_io = io.BytesIO()
         file = await bot.get_file(message.photo[-1].file_id)
@@ -136,15 +131,23 @@ async def apply_ml_photo_message(message):
                 model_output["dishes"] + model_output["drinks"],
             ),
         )
-        if user["balance"] - PHOTO_DESCRIPTION_PRICE < 1:
-            await message.answer(
-                text="Ой! Кажется на балансе закончились ⭐️. Чтобы пополнить нажми 'Пополнить баланс'"
-            )
+        if alarm:
+            if user["balance"] - PHOTO_DESCRIPTION_PRICE < 1:
+                await message.answer(
+                    text="Ой! Кажется на балансе закончились ⭐️. Чтобы пополнить нажми 'Пополнить баланс'"
+                )
+
 
 @tracker_router.message(F.media_group_id != None)
 async def parse_photo(message: Message, media_events):
-    for mess in media_events:
-        await apply_ml_photo_message(mess)
+    for i, mess in enumerate(media_events):
+        alarm = True
+        if len(media_events) > 1:
+            if i != len(media_events) - 1:
+                alarm = False
+        res = await apply_ml_photo_message(mess, alarm=alarm)
+        if res == "Failed":
+            return None
 
 
 @tracker_router.message(F.photo)

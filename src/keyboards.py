@@ -4,7 +4,6 @@ from aiogram.types import (
     InlineKeyboardMarkup,
     InlineKeyboardButton,
 )
-from config import logger
 from utils import hash
 
 
