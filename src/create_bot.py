@@ -7,7 +7,7 @@ from asyncpg import create_pool
 from config import PG_DB, PG_PWD, PG_USER, TELEGRAM_TOKEN
 import asyncio
 from typing import List, Union
-from aiogram.dispatcher.middlewares import BaseMiddleware
+from aiogram.dispatcher.middlewares.base import BaseMiddleware
 
 class AlbumMiddleware(BaseMiddleware):
     album_data: dict = {}
