@@ -79,7 +79,8 @@ async def parse_photo(message: Message):
             reply_markup=main_keyboard(),
         )
         return None
-
+    await update_user_balance(user_id, user["balance"] - PHOTO_DESCRIPTION_PRICE)
+    
     async with ChatActionSender.typing(bot=bot, chat_id=user_id):
         file_in_io = io.BytesIO()
         file = await bot.get_file(message.photo[-1].file_id)
@@ -109,7 +110,6 @@ async def parse_photo(message: Message):
                 model_output["dishes"] + model_output["drinks"],
             ),
         )
-        await update_user_balance(user_id, user["balance"] - PHOTO_DESCRIPTION_PRICE)
         if user["balance"] - PHOTO_DESCRIPTION_PRICE < 1:
             await message.answer(
                 text="Ой! Кажется на балансе закончились ⭐️. Чтобы пополнить нажми 'Пополнить баланс'"
