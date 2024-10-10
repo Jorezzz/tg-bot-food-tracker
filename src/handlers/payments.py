@@ -2,14 +2,16 @@ from aiogram.types import Message, LabeledPrice, CallbackQuery, PreCheckoutQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram import Router, F
-from db.functions import (
-    get_promocode,
+from config import logger
+from db.users import (
     get_user,
     update_user,
-    update_promocode_quantity,
-    update_user_balance,
 )
-from config import logger
+from db.promocodes import (
+    get_promocode,
+    update_promocode_quantity,
+)
+from db.payments import update_user_balance
 from keyboards import payment_keyboard, payment_size_keyboard, main_keyboard
 
 
@@ -60,7 +62,9 @@ async def entered_promocode(message: Message, state: FSMContext):
 
 @payment_router.message(F.text.contains("Пополнить баланс"))
 async def send_payment_sizes(message: Message):
-    await message.reply("Выберите размер платежа", reply_markup=payment_size_keyboard())
+    await message.reply(
+        "Выберите размер пополнения", reply_markup=payment_size_keyboard()
+    )
 
 
 @payment_router.callback_query(F.data.startswith("cancel_payment"))
@@ -68,20 +72,21 @@ async def cancel_payment(call: CallbackQuery):
     await call.message.answer(text="Отменяю платёж", reply_markup=main_keyboard())
 
 
-@payment_router.message(F.text.contains("Пополнить на"))
-async def send_invoice_handler(message: Message):
-    size = int(message.text.split(" ")[-1])
+@payment_router.callback_query(F.data.startswith("pay_"))
+async def send_invoice_handler(call: CallbackQuery):
+    balance_payment = int(call.data.split("_")[1])
+    user_payment = int(call.data.split("_")[2])
     prices = [
-        LabeledPrice(label="XTR", amount=size),
+        LabeledPrice(label="RUB", amount=user_payment * 100),
     ]
-    await message.answer_invoice(
+    await call.message.answer_invoice(
         title="Пополнить баланс",
-        description=f"Пополнить баланс на {size} ⭐️",
+        description=f"Пополнить баланс на {balance_payment} ⭐️",
         prices=prices,
         provider_token="",
-        payload=f"pay_{size}",
-        currency="XTR",
-        reply_markup=payment_keyboard(size),
+        payload=f"pay_{balance_payment}",
+        currency="RUB",
+        reply_markup=payment_keyboard(user_payment),
     )
 
 

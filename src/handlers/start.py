@@ -1,7 +1,7 @@
 from aiogram import Router, F
 from aiogram.types import Message
 from config import logger, ADMIN_PASSWORD
-from db.functions import register_user, get_user, update_user
+from db.users import register_user, get_user, update_user
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from keyboards import main_keyboard

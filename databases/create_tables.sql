@@ -73,3 +73,15 @@ CREATE TABLE IF NOT EXISTS promocodes
     aux_property VARCHAR(255),
     PRIMARY KEY(name)
 );
+
+CREATE TABLE IF NOT EXISTS payments
+(
+    dttm_created TIMESTAMP NOT NULL DEFAULT current_timestamp,
+    dttm_updated TIMESTAMP,
+    user_id BIGINT NOT NULL,
+    payment_id VARCHAR(255) NOT NULL UNIQUE,
+    amount BIGINT NOT NULL,
+    balance_boost BIGINT NOT NULL,
+    status VARCHAR(255),
+    PRIMARY KEY(payment_id)
+);

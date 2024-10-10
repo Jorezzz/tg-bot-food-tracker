@@ -1,11 +1,9 @@
 from typing import Dict, Any, List
-from config import logger
 
 
 class PGClient:
     def __init__(self, pool):
         self.pool = pool
-        logger.info("PG Client initialized")
 
     def _prepare_insertion(self, data: Dict[str, Any]):
         columns = ", ".join(list(data.keys()))
@@ -71,12 +69,6 @@ class PGClient:
             )
             return rows
 
-    async def select_dish(self, user_id, message_id, dish_id):
-        res = await self.select_one(
-            "dishes", {"user_id": user_id, "message_id": message_id, "dish_id": dish_id}
-        )
-        return res
-
     async def update(self, table_name, where_dict, update_dict):
         update_query = self._prepare_update_query(update_dict)
         additive = len(update_dict)
@@ -89,14 +81,6 @@ class PGClient:
             """,
             *values,
         )
-
-    async def update_dish(self, user_id, message_id, dish_id, update_dict):
-        where_dict = {
-            "user_id": int(user_id),
-            "message_id": int(message_id),
-            "dish_id": int(dish_id),
-        }
-        await self.update("dishes", where_dict, update_dict)
 
     async def select_dish_history(self, dttm):
         async with self.pool.acquire() as con:
@@ -112,15 +96,3 @@ class PGClient:
                 dttm,
             )
             return rows
-
-    async def select_promocode(self, password):
-        async with self.pool.acquire() as con:
-            row = await con.fetchrow(
-                """
-                SELECT *
-                FROM promocodes
-                WHERE password = $1
-            """,
-                password,
-            )
-            return row

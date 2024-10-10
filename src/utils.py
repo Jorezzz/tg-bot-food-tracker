@@ -25,3 +25,11 @@ def encode_image(image):
 
 def hash(input_string):
     return Fingerprint32(input_string) if input_string is not None else None
+
+
+def get_pfc_limits_from_callories_limit(energy_limit):
+    return {
+        "proteins_limit": int(energy_limit * 0.3 / 4),
+        "carbohydrates_limit": int(energy_limit * 0.4 / 4),
+        "fats_limit": int(energy_limit * 0.3 / 9),
+    }

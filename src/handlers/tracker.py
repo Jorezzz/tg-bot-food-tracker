@@ -19,14 +19,16 @@ from model import (
     get_chatgpt_remaining_energy_suggestion,
     form_output,
 )
-from db.functions import (
+from db.users import (
     add_meal_energy,
     get_user,
     pg_log_message,
+)
+from db.payments import update_user_balance
+from db.dishes import (
     remove_dish_from_user_day,
     update_dish_quantity,
     get_dish_by_id,
-    update_user_balance,
 )
 from keyboards import main_keyboard, dishes_keyboard, remove_or_edit_keyboard
 
