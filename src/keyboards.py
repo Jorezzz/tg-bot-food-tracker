@@ -83,12 +83,12 @@ def remove_or_edit_keyboard(message_id, dish_id):
 def payment_size_keyboard():
     kb_list = [
         [
-            KeyboardButton(text="Пополнить на 20"),
-            KeyboardButton(text="Пополнить на 50"),
+            KeyboardButton(text="50 рублей (20 фото)"),
+            KeyboardButton(text="100 рублей (50 фото)"),
         ],
         [
-            KeyboardButton(text="Пополнить на 100"),
-            KeyboardButton(text="Пополнить на 300"),
+            KeyboardButton(text="175 рублей (100 фото)"),
+            KeyboardButton(text="🔥450 рублей (300 фото)"),
         ],
         [KeyboardButton(text="Назад")],
     ]
