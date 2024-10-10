@@ -81,9 +81,9 @@ def remove_or_edit_keyboard(message_id, dish_id):
     )
 
 
-def get_inline_button_by_packet(packet):
+def get_inline_button_by_packet(packet, pre_text=""):
     return InlineKeyboardButton(
-        text=f"{balance_prices[packet]} рублей ({packet} фото)",
+        text=f"{pre_text}{balance_prices[packet]} рублей ({packet} фото)",
         callback_data=f"pay_{packet*PHOTO_DESCRIPTION_PRICE}_{balance_prices[packet]}",
     )
 
@@ -96,7 +96,7 @@ def payment_size_keyboard():
         ],
         [
             get_inline_button_by_packet(100),
-            get_inline_button_by_packet(300),
+            get_inline_button_by_packet(300, pre_text="🔥"),
         ],
         [InlineKeyboardButton(text="Назад", callback_data="cancel_payment")],
     ]

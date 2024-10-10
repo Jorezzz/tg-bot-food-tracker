@@ -48,7 +48,7 @@ async def process_finish_day(message: Message, state: FSMContext):
             int(message.text.split(".")[1]),
         )
         await message.answer(text="Время окончания дня измененно")
-    except ValueError:
+    except (ValueError, IndexError):
         await message.answer(text="Неверный формат ввода")
 
 
