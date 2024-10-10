@@ -137,32 +137,17 @@ async def finish_day_check_all_users():
     hour = dttm.hour
     minute = dttm.minute
     res = await pg_client.select_many("users", {"end_hour": hour, "end_minute": minute})
-    for row in res:
-        await finish_user_day(row["user_id"], dttm)
-
-
-async def finish_user_day(user_id, dttm):
-    user_data = await get_user(user_id)
-    started_dttm = user_data["dttm_started_dttm"]
-    pg_client = dp["pg_client"]
+    user_results = []
+    for user in res:
+        user_result = await finish_user_day(user, dttm)
+        user_results.append(user_result)
     await pg_client.insert(
         "daily_energy",
-        {
-            "user_id": user_id,
-            "dttm_started_dttm": started_dttm,
-            "dttm_finished_dttm": dttm,
-            "current_energy": user_data["current_energy"],
-            "energy_limit": user_data["energy_limit"],
-            "current_proteins": user_data["current_proteins"],
-            "proteins_limit": user_data["proteins_limit"],
-            "current_carbohydrates": user_data["current_carbohydrates"],
-            "carbohydrates_limit": user_data["carbohydrates_limit"],
-            "current_fats": user_data["current_fats"],
-            "fats_limit": user_data["fats_limit"],
-        },
+        user_results
     )
-    await update_user(
-        user_id,
+    await pg_client.update(
+        'users',
+        {"end_hour": hour, "end_minute": minute},
         update_dict={
             "current_energy": 0,
             "current_proteins": 0,
@@ -171,10 +156,27 @@ async def finish_user_day(user_id, dttm):
             "dttm_started_dttm": dttm,
         },
     )
-    results = f'🚀Итоги за день:\n\nКалории — {user_data["current_energy"]}/{user_data["energy_limit"]} ккал\nБелки — {user_data["current_proteins"]}/{user_data["proteins_limit"]} г\nЖиры — {user_data["current_fats"]}/{user_data["fats_limit"]} г\nУглеводы — {user_data["current_carbohydrates"]}/{user_data["carbohydrates_limit"]} г'
+
+
+async def finish_user_day(user, dttm):
+    started_dttm = user["dttm_started_dttm"]
+    results = f'🚀Итоги за день:\n\nКалории — {user["current_energy"]}/{user["energy_limit"]} ккал\nБелки — {user["current_proteins"]}/{user["proteins_limit"]} г\nЖиры — {user["current_fats"]}/{user["fats_limit"]} г\nУглеводы — {user["current_carbohydrates"]}/{user["carbohydrates_limit"]} г'
     await bot(
-        SendMessage(chat_id=int(user_id), text=results, disable_notification=True)
+        SendMessage(chat_id=int(user['user_id']), text=results, disable_notification=True)
     )
+    return {
+            "user_id": user['user_id'],
+            "dttm_started_dttm": started_dttm,
+            "dttm_finished_dttm": dttm,
+            "current_energy": user["current_energy"],
+            "energy_limit": user["energy_limit"],
+            "current_proteins": user["current_proteins"],
+            "proteins_limit": user["proteins_limit"],
+            "current_carbohydrates": user["current_carbohydrates"],
+            "carbohydrates_limit": user["carbohydrates_limit"],
+            "current_fats": user["current_fats"],
+            "fats_limit": user["fats_limit"],
+        }
     # dish_history = await pg_client.select_dish_history(started_dttm)
     # text = await get_chatgpt_end_day_suggestion(
     #     dish_history,
