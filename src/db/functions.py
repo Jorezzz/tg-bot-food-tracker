@@ -141,21 +141,22 @@ async def finish_day_check_all_users():
     for user in res:
         user_result = await finish_user_day(user, dttm)
         user_results.append(user_result)
-    await pg_client.insert(
-        "daily_energy",
-        user_results
-    )
-    await pg_client.update(
-        'users',
-        {"end_hour": hour, "end_minute": minute},
-        update_dict={
-            "current_energy": 0,
-            "current_proteins": 0,
-            "current_carbohydrates": 0,
-            "current_fats": 0,
-            "dttm_started_dttm": dttm,
-        },
-    )
+    if len(user_results) > 0:
+        await pg_client.insert(
+            "daily_energy",
+            user_results
+        )
+        await pg_client.update(
+            'users',
+            {"end_hour": hour, "end_minute": minute},
+            update_dict={
+                "current_energy": 0,
+                "current_proteins": 0,
+                "current_carbohydrates": 0,
+                "current_fats": 0,
+                "dttm_started_dttm": dttm,
+            },
+        )
 
 
 async def finish_user_day(user, dttm):
