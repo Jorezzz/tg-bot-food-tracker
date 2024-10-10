@@ -6,10 +6,6 @@ from db.users import update_user, swap_time
 from utils import get_pfc_limits_from_callories_limit
 from keyboards import settings_keyboard, main_keyboard
 
-# from create_bot import i18n_middleware
-# from aiogram.utils.i18n import gettext as _
-# from aiogram.utils.i18n import lazy_gettext as __
-
 
 class EnergyLimitForm(StatesGroup):
     energy_limit = State()
@@ -20,17 +16,16 @@ class DayFinishForm(StatesGroup):
 
 
 settings_router = Router()
-# settings_router.message.middleware(i18n_middleware)
 
 
 @settings_router.message(F.text.contains("Настройки"))
 async def open_settings_menu(message: Message):
-    await message.reply(_("Выбери настройку"), reply_markup=settings_keyboard())
+    await message.reply("Выбери настройку", reply_markup=settings_keyboard())
 
 
 @settings_router.message(F.text.contains("Назад"))
 async def close_settings_menu(message: Message):
-    await message.reply(_("Возвращаюсь назад"), reply_markup=main_keyboard())
+    await message.reply("Возвращаюсь назад", reply_markup=main_keyboard())
 
 
 @settings_router.message(F.text.contains("Изменить время окончания дня"))
@@ -38,7 +33,7 @@ async def close_settings_menu(message: Message):
 async def start_updating_finish_day(message: Message, state: FSMContext):
     await state.set_state(DayFinishForm.day_finish)
     await message.reply(
-        _("Укажи новое время окончания дня в формате 'час.минута' (например 17.05)"),
+        "Укажи новое время окончания дня в формате 'час.минута' (например 17.05)",
         reply_markup=main_keyboard(),
     )
 
@@ -52,9 +47,9 @@ async def process_finish_day(message: Message, state: FSMContext):
             int(message.text.split(".")[0]),
             int(message.text.split(".")[1]),
         )
-        await message.answer(text=_("Время окончания дня измененно"))
+        await message.answer(text="Время окончания дня измененно")
     except ValueError:
-        await message.answer(text=_("Неверный формат ввода"))
+        await message.answer(text="Неверный формат ввода")
 
 
 @settings_router.message(F.text.contains("Изменить дневной лимит"))
