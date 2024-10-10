@@ -1,10 +1,12 @@
 from create_bot import dp, bot
 from aiogram.methods.send_message import SendMessage
-from config import END_DAY_SUGGESTION_PRICE
+from config import END_DAY_SUGGESTION_PRICE, Configuration
 from utils import hash
 from model import get_chatgpt_end_day_suggestion
 import pytz
 import datetime
+import json
+from yookassa import Payment
 
 TZ = pytz.timezone("Europe/Moscow")
 
@@ -280,3 +282,50 @@ async def update_promocode_quantity(password, new_amount):
 
 async def update_user_balance(user_id, new_balance):
     await update_user(user_id, {"balance": new_balance})
+
+
+# async def check_payment(payment_id):
+#     payment = json.loads((Payment.find_one(payment_id)).json())
+#     while payment["status"] == "pending":
+#         payment = json.loads((Payment.find_one(payment_id)).json())
+#         await asyncio.sleep(3)
+
+#     if payment["status"] == "succeeded":
+#         print("SUCCSESS RETURN")
+#         print(payment)
+#         return True
+#     else:
+#         print("BAD RETURN")
+#         print(payment)
+#         return False
+
+
+# async def check_all_pending_invoices():
+#     pg_client = dp["pg_client"]
+#     rows = await pg_client.select_many("payments", {"status": "pending"})
+#     async for row in rows:
+#         payment = json.loads((Payment.find_one(row["payment_id"])).json())
+
+
+# async def add_payment(payment_id, user_id, amount, balance_boost):
+#     pg_client = dp["pg_client"]
+#     await pg_client.insert(
+#         "payments",
+#         {
+#             "payment_id": payment_id,
+#             "user_id": user_id,
+#             "amount": amount,
+#             "balance_boost": balance_boost,
+#             "status": "pending",
+#         },
+#     )
+
+
+# async def update_status_payment(payment_id, new_status):
+#     pg_client = dp["pg_client"]
+#     now = datetime.datetime.now(pytz.timezone("Europe/Moscow")).replace(tzinfo=None)
+#     await pg_client.update(
+#         "payments",
+#         {"payment_id": payment_id},
+#         {"status": new_status, "dttm_updated": now},
+#     )

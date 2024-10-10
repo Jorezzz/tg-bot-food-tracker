@@ -5,6 +5,7 @@ from aiogram.types import (
     InlineKeyboardButton,
 )
 from utils import hash
+from config import balance_prices, PHOTO_DESCRIPTION_PRICE
 
 
 def main_keyboard(is_persistent=True):
@@ -80,32 +81,34 @@ def remove_or_edit_keyboard(message_id, dish_id):
     )
 
 
-def payment_size_keyboard():
-    kb_list = [
-        [
-            KeyboardButton(text="Пополнить на 20"),
-            KeyboardButton(text="Пополнить на 50"),
-        ],
-        [
-            KeyboardButton(text="Пополнить на 100"),
-            KeyboardButton(text="Пополнить на 300"),
-        ],
-        [KeyboardButton(text="Назад")],
-    ]
-    return ReplyKeyboardMarkup(
-        keyboard=kb_list,
-        resize_keyboard=True,
-        one_time_keyboard=True,
-        input_field_placeholder="Выберите размер пополнения",
+def get_inline_button_by_packet(packet):
+    return InlineKeyboardButton(
+        text=f"{balance_prices[packet]} рублей ({packet} фото)",
+        callback_data=f"pay_{packet*PHOTO_DESCRIPTION_PRICE}_{balance_prices[packet]}",
     )
 
 
-def payment_keyboard(size):
+def payment_size_keyboard():
+    kb_list = [
+        [
+            get_inline_button_by_packet(20),
+            get_inline_button_by_packet(50),
+        ],
+        [
+            get_inline_button_by_packet(100),
+            get_inline_button_by_packet(300),
+        ],
+        [InlineKeyboardButton(text="Назад", callback_data="cancel_payment")],
+    ]
+    return InlineKeyboardMarkup(inline_keyboard=kb_list)
+
+
+def payment_keyboard(price):
     return InlineKeyboardMarkup(
         inline_keyboard=[
             [
                 InlineKeyboardButton(
-                    text=f"Оплатить {size} ⭐️",
+                    text=f"Оплатить {price} рублей",
                     pay=True,
                 )
             ],
