@@ -110,7 +110,7 @@ async def apply_ml_photo_message(message, alarm=True):
         await bot.download_file(file.file_path, file_in_io)
         b64_photo = encode_image(file_in_io.read())
 
-        text = None  # message.caption
+        text = message.caption
         if text is not None:
             response = await get_chatgpt_photo_description(b64_photo, text)
         else:
