@@ -10,7 +10,7 @@ from aiogram.exceptions import TelegramForbiddenError
 TZ = pytz.timezone("Europe/Moscow")
 
 
-async def pg_log_message(message, model_output, image):
+async def pg_log_message(message, model_output):
     user_id = message.from_user.id
     message_dttm = message.date.replace(tzinfo=None)
     message_id = message.message_id
@@ -51,7 +51,7 @@ async def pg_log_message(message, model_output, image):
             "user_id": user_id,
             "message_id": message_id,
             "input_text": None,  # message.caption,
-            "image": image,
+            "image": message.photo[-1].file_id,
             "resonse_raw": str(model_output),
         },
     )
