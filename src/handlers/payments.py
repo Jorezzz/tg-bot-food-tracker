@@ -2,7 +2,7 @@ from aiogram.types import Message, LabeledPrice, CallbackQuery, PreCheckoutQuery
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram import Router, F
-from config import logger
+from config import logger, PAYMENT_TOKEN
 from db.users import (
     get_user,
     update_user,
@@ -83,7 +83,7 @@ async def send_invoice_handler(call: CallbackQuery):
         title="Пополнить баланс",
         description=f"Пополнить баланс на {balance_payment} ⭐️",
         prices=prices,
-        provider_token="",
+        provider_token=PAYMENT_TOKEN,
         payload=f"pay_{balance_payment}",
         currency="RUB",
         reply_markup=payment_keyboard(user_payment),

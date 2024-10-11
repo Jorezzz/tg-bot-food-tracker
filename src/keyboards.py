@@ -91,7 +91,7 @@ def get_inline_button_by_packet(packet, pre_text=""):
 def payment_size_keyboard():
     kb_list = [
         [
-            get_inline_button_by_packet(20),
+            # get_inline_button_by_packet(20),
             get_inline_button_by_packet(50),
         ],
         [
