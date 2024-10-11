@@ -117,7 +117,7 @@ async def apply_ml_photo_message(message, alarm=True):
             response = await get_chatgpt_photo_description(b64_photo)
         model_output = eval(response["content"])
         output = form_output(model_output)
-        await pg_log_message(message, model_output)
+        await pg_log_message(message, model_output, text)
 
         await add_meal_energy(
             user_id,

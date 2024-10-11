@@ -10,7 +10,7 @@ from aiogram.exceptions import TelegramForbiddenError
 TZ = pytz.timezone("Europe/Moscow")
 
 
-async def pg_log_message(message, model_output):
+async def pg_log_message(message, model_output, optional_text=None):
     user_id = message.from_user.id
     message_dttm = message.date.replace(tzinfo=None)
     message_id = message.message_id
@@ -50,7 +50,7 @@ async def pg_log_message(message, model_output):
             "message_dttm": message_dttm,
             "user_id": user_id,
             "message_id": message_id,
-            "input_text": None,  # message.caption,
+            "input_text": optional_text,  # message.caption,
             "image": message.photo[-1].file_id,
             "resonse_raw": str(model_output),
         },
@@ -152,26 +152,29 @@ async def finish_day_check_all_users():
 
 async def finish_user_day(user, dttm):
     try:
-        started_dttm = user["dttm_started_dttm"]
-        results = f'🚀Итоги за день:\n\nКалории — {user["current_energy"]}/{user["energy_limit"]} ккал\nБелки — {user["current_proteins"]}/{user["proteins_limit"]} г\nЖиры — {user["current_fats"]}/{user["fats_limit"]} г\nУглеводы — {user["current_carbohydrates"]}/{user["carbohydrates_limit"]} г'
-        await bot(
-            SendMessage(
-                chat_id=int(user["user_id"]), text=results, disable_notification=True
+        if user["current_energy"] == 0:
+            started_dttm = user["dttm_started_dttm"]
+            results = f'🚀Итоги за день:\n\nКалории — {user["current_energy"]}/{user["energy_limit"]} ккал\nБелки — {user["current_proteins"]}/{user["proteins_limit"]} г\nЖиры — {user["current_fats"]}/{user["fats_limit"]} г\nУглеводы — {user["current_carbohydrates"]}/{user["carbohydrates_limit"]} г'
+            await bot(
+                SendMessage(
+                    chat_id=int(user["user_id"]),
+                    text=results,
+                    disable_notification=True,
+                )
             )
-        )
-        return {
-            "user_id": user["user_id"],
-            "dttm_started_dttm": started_dttm,
-            "dttm_finished_dttm": dttm,
-            "current_energy": user["current_energy"],
-            "energy_limit": user["energy_limit"],
-            "current_proteins": user["current_proteins"],
-            "proteins_limit": user["proteins_limit"],
-            "current_carbohydrates": user["current_carbohydrates"],
-            "carbohydrates_limit": user["carbohydrates_limit"],
-            "current_fats": user["current_fats"],
-            "fats_limit": user["fats_limit"],
-        }
+            return {
+                "user_id": user["user_id"],
+                "dttm_started_dttm": started_dttm,
+                "dttm_finished_dttm": dttm,
+                "current_energy": user["current_energy"],
+                "energy_limit": user["energy_limit"],
+                "current_proteins": user["current_proteins"],
+                "proteins_limit": user["proteins_limit"],
+                "current_carbohydrates": user["current_carbohydrates"],
+                "carbohydrates_limit": user["carbohydrates_limit"],
+                "current_fats": user["current_fats"],
+                "fats_limit": user["fats_limit"],
+            }
     except TelegramForbiddenError as e:
         return None
     # dish_history = await pg_client.select_dish_history(started_dttm)
