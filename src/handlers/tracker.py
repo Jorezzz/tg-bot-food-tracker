@@ -116,6 +116,11 @@ async def apply_ml_photo_message(message, alarm=True):
         else:
             response = await get_chatgpt_photo_description(b64_photo)
         model_output = eval(response["content"])
+        if len(model_output["dishes"] + model_output["drinks"]) == 0:
+            await message.answer(
+                text="Я не смог ничего распознать. Проверь, что фото сделано без размытия и на нём отчётливо видно блюдо."
+            )
+            return None
         output = form_output(model_output)
         await pg_log_message(message, model_output, text)
 
