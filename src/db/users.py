@@ -152,7 +152,7 @@ async def finish_day_check_all_users():
 
 async def finish_user_day(user, dttm):
     try:
-        if user["current_energy"] == 0:
+        if user["current_energy"] != 0:
             started_dttm = user["dttm_started_dttm"]
             results = f'🚀Итоги за день:\n\nКалории — {user["current_energy"]}/{user["energy_limit"]} ккал\nБелки — {user["current_proteins"]}/{user["proteins_limit"]} г\nЖиры — {user["current_fats"]}/{user["fats_limit"]} г\nУглеводы — {user["current_carbohydrates"]}/{user["carbohydrates_limit"]} г'
             await bot(
