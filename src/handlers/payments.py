@@ -13,6 +13,7 @@ from db.promocodes import (
 )
 from db.payments import update_user_balance
 from keyboards import payment_keyboard, payment_size_keyboard, main_keyboard
+import json
 
 
 class Promocode(StatesGroup):
@@ -87,6 +88,25 @@ async def send_invoice_handler(call: CallbackQuery):
         payload=f"pay_{balance_payment}",
         currency="RUB",
         reply_markup=payment_keyboard(user_payment),
+        need_email=True,
+        send_email_to_provider=True,
+        provider_data=json.dumps(
+            {
+                "receipt": {
+                    "items": [
+                        {
+                            "description": f"Пополнение счёта на {balance_payment} баллов",
+                            "quantity": "1",
+                            "amount": {
+                                "value": f"{user_payment}.00",
+                                "currency": "RUB",
+                            },
+                            "vat_code": 1,
+                        }
+                    ]
+                }
+            }
+        ),
     )
 
 
