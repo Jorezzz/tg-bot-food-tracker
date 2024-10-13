@@ -44,6 +44,7 @@ async def pg_log_message(message, model_output, optional_text=None):
             }
         )
     pg_client = dp["pg_client"]
+    photo_id = None if message.photo is None else message.photo[-1].file_id
     await pg_client.insert(
         "messages",
         {
@@ -51,7 +52,7 @@ async def pg_log_message(message, model_output, optional_text=None):
             "user_id": user_id,
             "message_id": message_id,
             "input_text": optional_text,  # message.caption,
-            "image": message.photo[-1].file_id,
+            "image": photo_id,
             "resonse_raw": str(model_output),
         },
     )

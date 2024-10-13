@@ -9,8 +9,8 @@ from db.init_db_values import init_all_db_values
 async def main():
     dp.include_router(start_router)
     dp.include_router(settings_router)
-    dp.include_router(tracker_router)
     dp.include_router(payment_router)
+    dp.include_router(tracker_router)
 
     pool = await init_db_postgres()
     dp["pg_client"] = PGClient(pool)

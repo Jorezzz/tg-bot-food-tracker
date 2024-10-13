@@ -4,6 +4,7 @@ from config import (
     OPENAI_TOKEN,
     logger,
     OPENAI_SYSTEM_PROMPT,
+    OPENAI_SYSTEM_TEXT_PROMPT,
     OPENAI_SYSTEM_SUGGEST_PROMPT,
     OPENAI_SYSTEM_END_DAY_SUGGEST_PROMPT,
     MODEL,
@@ -60,42 +61,17 @@ async def make_request(headers, payload):
             return result
 
 
-@alru_cache(150)
-async def get_chatgpt_photo_description(b64_photo, optional_text=None):
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {OPENAI_TOKEN}",
-    }
-
-    if optional_text:
-        context = [
-            {
-                "type": "text",
-                "text": optional_text,
-            },
-            {
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{b64_photo}"},
-            },
-        ]
-    else:
-        context = [
-            {
-                "type": "image_url",
-                "image_url": {"url": f"data:image/jpeg;base64,{b64_photo}"},
-            },
-        ]
-
-    payload = {
-        "model": MODEL,
+def make_chatgpt_payload(model, prompt, user_context):
+    return {
+        "model": model,
         "messages": [
             {
                 "role": "system",
-                "content": [{"type": "text", "text": OPENAI_SYSTEM_PROMPT}],
+                "content": [{"type": "text", "text": prompt}],
             },
         ]
-        + [{"role": "user", "content": context}],
-        "max_tokens": 1000,
+        + user_context,
+        "max_tokens": 1500,
         "response_format": {
             "type": "json_schema",
             "json_schema": {
@@ -157,6 +133,52 @@ async def get_chatgpt_photo_description(b64_photo, optional_text=None):
             },
         },
     }
+
+
+@alru_cache(150)
+async def get_chatgpt_photo_description(b64_photo=None, optional_text=None):
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {OPENAI_TOKEN}",
+    }
+
+    if b64_photo is None and optional_text is None:
+        raise ValueError("Either photo or text should be not None")
+
+    if b64_photo is None:
+        prompt = OPENAI_SYSTEM_TEXT_PROMPT
+        context = [
+            {
+                "type": "text",
+                "text": optional_text,
+            }
+        ]
+    else:
+        prompt = OPENAI_SYSTEM_PROMPT
+        if optional_text is not None:
+            context = [
+                {
+                    "type": "text",
+                    "text": optional_text,
+                },
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{b64_photo}"},
+                },
+            ]
+        else:
+            context = [
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{b64_photo}"},
+                }
+            ]
+
+    payload = make_chatgpt_payload(
+        MODEL,
+        prompt,
+        [{"role": "user", "content": context}],
+    )
 
     response = await make_request(headers, payload)
     return response["choices"][0]["message"]

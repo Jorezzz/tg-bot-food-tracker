@@ -11,6 +11,7 @@ from config import (
     logger,
     PHOTO_DESCRIPTION_PRICE,
     REMAINING_ENERGY_SUGGESTION_PRICE,
+    TEXT_DESCRIPTION_PRICE,
 )
 import io
 from utils import encode_image
@@ -211,3 +212,49 @@ async def edit_dish(message: Message, state: FSMContext):
     except Exception as e:
         logger.error(f"{e}")
         await message.answer(text="Неверный формат ввода")
+
+
+@tracker_router.message(F.text)
+async def parse_text(message, alarm=True):
+    user_id = message.from_user.id
+    user = await get_user(user_id)
+
+    if not check_if_valid_balance(user, TEXT_DESCRIPTION_PRICE):
+        await message.answer(
+            "Для дальнейшей работы недостаточно средств, пополни баланс ⭐️ нажав 'Пополнить баланс'",
+            reply_markup=main_keyboard(),
+        )
+        return "Failed"
+    await update_user_balance(user_id, user["balance"] - TEXT_DESCRIPTION_PRICE)
+
+    async with ChatActionSender.typing(bot=bot, chat_id=user_id):
+        text = message.text
+        response = await get_chatgpt_photo_description(optional_text=text)
+        model_output = eval(response["content"])
+        if len(model_output["dishes"] + model_output["drinks"]) == 0:
+            await message.answer(
+                text="Я не смог ничего распознать. Попробуй описать точнее"
+            )
+            return None
+        output = form_output(model_output)
+        await pg_log_message(message, model_output, text)
+
+        await add_meal_energy(
+            user_id,
+            output["energy_total"],
+            output["proteins_total"],
+            output["carbohydrates_total"],
+            output["fats_total"],
+        )
+        await message.answer(
+            text=output["output_text"],
+            reply_markup=dishes_keyboard(
+                message.message_id,
+                model_output["dishes"] + model_output["drinks"],
+            ),
+        )
+        if alarm:
+            if user["balance"] - TEXT_DESCRIPTION_PRICE < 1:
+                await message.answer(
+                    text="Ой! Кажется на балансе закончились ⭐️. Чтобы пополнить нажми 'Пополнить баланс'"
+                )
