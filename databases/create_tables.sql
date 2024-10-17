@@ -29,6 +29,7 @@ CREATE TABLE IF NOT EXISTS users
     end_hour BIGINT NOT NULL DEFAULT 0,
     end_minute BIGINT NOT NULL DEFAULT 0,
     balance BIGINT NOT NULL DEFAULT 0,
+    external_user_id VARCHAR(255),
     PRIMARY KEY(user_id)
 );
 

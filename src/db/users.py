@@ -66,6 +66,7 @@ async def register_user(
     end_hour=0,
     end_minute=0,
     balance=0,
+    external_user_id=None,
 ):
     limits = get_pfc_limits_from_callories_limit(energy_limit)
     pg_client = dp["pg_client"]
@@ -88,6 +89,7 @@ async def register_user(
             "end_hour": end_hour,
             "end_minute": end_minute,
             "balance": balance,
+            "external_user_id": external_user_id,
         },
         additional_query="ON CONFLICT (user_id) DO NOTHING",
     )

@@ -214,7 +214,7 @@ async def edit_dish(message: Message, state: FSMContext):
         await message.answer(text="Неверный формат ввода")
 
 
-@tracker_router.message(F.text)
+@tracker_router.message((F.text) & (F.text != "/start"))
 async def parse_text(message, alarm=True):
     user_id = message.from_user.id
     user = await get_user(user_id)
