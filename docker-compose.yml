@@ -1,12 +1,15 @@
 services:
   app:
-    build: ./src
+    build:
+      context: ./src
+      dockerfile: Dockerfile
     container_name: app
-    command: python bot.py
+    command: sh -c "pip install -r requirements.txt && python bot.py"
     ports:
       - 80:80
     volumes:
       - ./src:/app
+      - ./requirements.txt:/app/requirements.txt
     depends_on:
       - postgres
 
