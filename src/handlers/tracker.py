@@ -72,7 +72,7 @@ async def get_daily_total(message: Message):
     try:
         user = await get_user(user_id)
         await message.answer(
-            text = f"Дневной лимит калорий: {user['current_energy']} из {user['energy_limit']}\nБелки: {user['current_proteins']}г \nЖиры: {user['current_fats']}г \nУглеводы: {user['current_carbohydrates']}г \n\nБаланс: {user.get('balance', 0)} ⭐️"
+            text = f"Осталось: {user['energy_limit'] - user['current_energy']} из {user['energy_limit']} ккал\nСъедено: {user['current_energy']} ккал\nБелки: {user['current_proteins']}г \nЖиры: {user['current_fats']}г \nУглеводы: {user['current_carbohydrates']}г \n\nБаланс: {user.get('balance', 0)} ⭐️"
         )
         # is_valid_balance = await check_if_valid_balance(
         #     user, REMAINING_ENERGY_SUGGESTION_PRICE
