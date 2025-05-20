@@ -1,0 +1,6 @@
+src/__pycache__
+src/db/__pycache__
+src/auth/__pycache__
+src/handlers/__pycache__
+*.ipynb
+pg_data

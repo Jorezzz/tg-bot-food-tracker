@@ -1,0 +1,26 @@
+services:
+  app:
+    build:
+      context: ./src
+      dockerfile: Dockerfile
+    container_name: app
+    command: sh -c "pip install -r requirements.txt && python bot.py"
+    ports:
+      - 80:80
+    volumes:
+      - ./src:/app
+      - ./requirements.txt:/app/requirements.txt
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:14-alpine
+    ports:
+      - 5432:5432
+    environment:
+      - POSTGRES_PASSWORD=PWD
+      - POSTGRES_USER=USER
+      - POSTGRES_DB=DB
+    volumes:
+      - ./databases:/docker-entrypoint-initdb.d
+      - ./pg_data:/var/lib/postgresql/data

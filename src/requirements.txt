@@ -1,0 +1,7 @@
+aiogram
+aiohttp
+python-dotenv
+apscheduler
+asyncpg
+async-lru
+cityhash
